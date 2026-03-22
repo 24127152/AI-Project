@@ -109,6 +109,79 @@ def A_search(grid, start, goal):
         "processing_time_ms": round((end_time - start_time) * 1000, 4),
     }
 
+def Beam_search(grid, start, goal, beam_width=2):
+    start_time = time.perf_counter()
+
+    rows, cols = len(grid), len(grid[0])
+
+    explored_nodes = set()
+    max_queue_size = 0 
+
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+    # beam lưu trữ danh sách các node đang xét
+    # Cấu trúc: (f_cost, g_cost, node, path)
+    beam = [(Heuristic(start, goal), 0, start, [start])]
+
+    while beam:
+        next_beam = []
+        
+        for current_f_cost, current_g_cost, current_node, path in beam:
+            if current_node in explored_nodes:
+                continue
+
+            explored_nodes.add(current_node)
+
+            if current_node == goal:
+                end_time = time.perf_counter()
+                return {
+                    "path_found": path,
+                    "explored_nodes_count": len(explored_nodes),
+                    "total_path_cost": current_g_cost,
+                    "max_queue_size": max_queue_size,
+                    "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                }
+
+            # Sinh các node kề
+            for dr, dc in directions:
+                neighbor = (current_node[0] + dr, current_node[1] + dc)
+
+                if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
+                    step_cost = grid[neighbor[0]][neighbor[1]]
+                    
+                    if step_cost != math.inf and neighbor not in explored_nodes:
+                        new_g_cost = current_g_cost + step_cost
+                        new_f_cost = new_g_cost + Heuristic(neighbor, goal)
+                        next_beam.append((new_f_cost, new_g_cost, neighbor, path + [neighbor]))
+
+        # Cập nhật max_queue_size dựa trên số lượng node sinh ra trước khi bị cắt tỉa
+        if len(next_beam) > max_queue_size:
+            max_queue_size = len(next_beam)
+
+        # Sắp xếp các node kề mới sinh ra theo f_cost tăng dần
+        next_beam.sort(key=lambda x: x[0])
+
+        # Cắt tỉa (Pruning): Chỉ giữ lại 'beam_width' node tốt nhất cho bước tiếp theo
+        beam = []
+        seen_in_next = set()
+        for item in next_beam:
+            node = item[2]
+            # Tránh thêm các node trùng lặp vào beam mới
+            if node not in seen_in_next:
+                seen_in_next.add(node)
+                beam.append(item)
+                if len(beam) == beam_width:
+                    break
+
+    end_time = time.perf_counter()
+    return {
+        "path_found": None,
+        "explored_nodes_count": len(explored_nodes),
+        "total_path_cost": math.inf,
+        "max_queue_size": max_queue_size,
+        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+    }
+
 def Form(grid, start, goal):
     start_time = time.perf_counter()
 
