@@ -2,6 +2,10 @@ import heapq
 import math
 import time
 
+WALL_VALUE = 1
+WALKABLE_VALUES = {0, 2, 3}
+
+
 def Heuristic(node, goal):
     # Sử dụng Manhattan distance làm heuristic
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
@@ -9,10 +13,20 @@ def Heuristic(node, goal):
 def UCS(grid, start, goal):
     start_time = time.perf_counter()
 
+    if not grid or not grid[0]:
+        return {
+            "path_found": None,
+            "explored_nodes_count": 0,
+            "total_path_cost": math.inf,
+            "max_queue_size": 0,
+            "processing_time_ms": 0,
+        }
+
     rows, cols = len(grid), len(grid[0])
 
     priority_queue = [(0, start, [start])]
     explored_nodes = set()
+    exploration_order = []
     max_queue_size = 0
 
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -27,11 +41,13 @@ def UCS(grid, start, goal):
             continue
 
         explored_nodes.add(current_node)
+        exploration_order.append(current_node)
 
         if current_node == goal:
             end_time = time.perf_counter()
             return {
                 "path_found": path,
+                "exploration_order": exploration_order,
                 "explored_nodes_count": len(explored_nodes),
                 "total_path_cost": current_cost,
                 "max_queue_size": max_queue_size,
@@ -42,16 +58,17 @@ def UCS(grid, start, goal):
             neighbor = (current_node[0] + dr, current_node[1] + dc)
 
             if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
-                step_cost = grid[neighbor[0]][neighbor[1]]
+                neighbor_value = grid[neighbor[0]][neighbor[1]]
                 
-                # Bỏ qua nếu là tường (INF)
-                if step_cost != math.inf and neighbor not in explored_nodes:
+                if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
+                    step_cost = 1
                     new_cost = current_cost + step_cost
                     heapq.heappush(priority_queue, (new_cost, neighbor, path + [neighbor]))
                 
     end_time = time.perf_counter()
     return {
         "path_found": None,
+        "exploration_order": exploration_order,
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
@@ -62,11 +79,21 @@ def UCS(grid, start, goal):
 def A_search(grid, start, goal):
     start_time = time.perf_counter()
 
+    if not grid or not grid[0]:
+        return {
+            "path_found": None,
+            "explored_nodes_count": 0,
+            "total_path_cost": math.inf,
+            "max_queue_size": 0,
+            "processing_time_ms": 0,
+        }
+
     rows, cols = len(grid), len(grid[0])
     # Queue: (f_cost, g_cost, node, path)
     priority_queue = [(Heuristic(start, goal), 0, start, [start])]
 
     explored_nodes = set()
+    exploration_order = []
     max_queue_size = 0
 
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -80,11 +107,13 @@ def A_search(grid, start, goal):
             continue
 
         explored_nodes.add(current_node)
+        exploration_order.append(current_node)
 
         if current_node == goal:
             end_time = time.perf_counter()
             return {
                 "path_found": path,
+                "exploration_order": exploration_order,
                 "explored_nodes_count": len(explored_nodes),
                 "total_path_cost": current_g_cost,
                 "max_queue_size": max_queue_size,
@@ -94,8 +123,9 @@ def A_search(grid, start, goal):
         for dr, dc in directions:
             neighbor = (current_node[0] + dr, current_node[1] + dc)
             if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
-                step_cost = grid[neighbor[0]][neighbor[1]]
-                if step_cost != math.inf and neighbor not in explored_nodes:
+                neighbor_value = grid[neighbor[0]][neighbor[1]]
+                if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
+                    step_cost = 1
                     new_g_cost = current_g_cost + step_cost
                     new_f_cost = new_g_cost + Heuristic(neighbor, goal)
                     heapq.heappush(priority_queue, (new_f_cost, new_g_cost, neighbor, path + [neighbor]))
@@ -103,6 +133,7 @@ def A_search(grid, start, goal):
     end_time = time.perf_counter()
     return {
         "path_found": None,
+        "exploration_order": exploration_order,
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
@@ -112,9 +143,19 @@ def A_search(grid, start, goal):
 def Beam_search(grid, start, goal, beam_width=2):
     start_time = time.perf_counter()
 
+    if not grid or not grid[0]:
+        return {
+            "path_found": None,
+            "explored_nodes_count": 0,
+            "total_path_cost": math.inf,
+            "max_queue_size": 0,
+            "processing_time_ms": 0,
+        }
+
     rows, cols = len(grid), len(grid[0])
 
     explored_nodes = set()
+    exploration_order = []
     max_queue_size = 0 
 
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -131,11 +172,13 @@ def Beam_search(grid, start, goal, beam_width=2):
                 continue
 
             explored_nodes.add(current_node)
+            exploration_order.append(current_node)
 
             if current_node == goal:
                 end_time = time.perf_counter()
                 return {
                     "path_found": path,
+                    "exploration_order": exploration_order,
                     "explored_nodes_count": len(explored_nodes),
                     "total_path_cost": current_g_cost,
                     "max_queue_size": max_queue_size,
@@ -147,9 +190,10 @@ def Beam_search(grid, start, goal, beam_width=2):
                 neighbor = (current_node[0] + dr, current_node[1] + dc)
 
                 if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
-                    step_cost = grid[neighbor[0]][neighbor[1]]
+                    neighbor_value = grid[neighbor[0]][neighbor[1]]
                     
-                    if step_cost != math.inf and neighbor not in explored_nodes:
+                    if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
+                        step_cost = 1
                         new_g_cost = current_g_cost + step_cost
                         new_f_cost = new_g_cost + Heuristic(neighbor, goal)
                         next_beam.append((new_f_cost, new_g_cost, neighbor, path + [neighbor]))
@@ -176,6 +220,7 @@ def Beam_search(grid, start, goal, beam_width=2):
     end_time = time.perf_counter()
     return {
         "path_found": None,
+        "exploration_order": exploration_order,
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,

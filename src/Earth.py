@@ -29,7 +29,7 @@ class Earth:
             self.last_tick = now
 
     def animation(self, screen):
-        # Keep backward compatibility if old code still calls animation()
+        #Vẽ hoạt ảnh trái đất
         self.draw(screen)
 
     def draw(self, screen):

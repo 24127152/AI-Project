@@ -75,7 +75,7 @@ class AlgoCard:
         #Tạo danh sách chứa các nút
         self.buttons = [left, right]
         self.current_index = 0
-        self.algorithms = ["IDA*", "A*"]
+        self.algorithms = ["IDA Star", "A Star", "UCS", "Beam Search"]
         self.selected_algorithm = self.algorithms[self.current_index]
 
     def handle_event(self, event):
@@ -95,16 +95,19 @@ class AlgoCard:
             return self.selected_algorithm
 
     def draw(self, screen):
-        screen.blit(self.panel, (370, 0))
+        panel_rect = self.panel.get_rect(topleft = (370, 0))
+        screen.blit(self.panel, panel_rect)
         for button in self.buttons:
             button.draw(screen)
         #vẽ tiêu đề và tên thuật toán đã chọn
         
-        title_font = pygame.font.Font("assets/fonts/Cyber.otf", 22)
-        title_font = title_font.render("Select Algorithm", True, (0, 0, 0))
-
+        title_font = pygame.font.Font("assets/fonts/Cyber.otf", 21)
+        title_surface = title_font.render("Select Algorithm", True, (224, 255, 255))
+        title_rect = title_surface.get_rect(center = (panel_rect.centerx, panel_rect.top + 20))
         #Vẽ tên thuật toán đã chọn
-        selection_text = pygame.font.Font("assets/fonts/Cyber.otf", 30)
-        selection_text = selection_text.render(self.selected_algorithm, True, (0, 0, 0))
-        screen.blit(selection_text,  (570, 62))
-        screen.blit(title_font, (490, 9))
+        selection_font = pygame.font.Font("assets/fonts/Cyber.otf", 30)
+        selection_surface = selection_font.render(self.selected_algorithm, True, (224, 255, 255))
+        selection_rect = selection_surface.get_rect(center=(panel_rect.centerx, panel_rect.top + 78))
+
+        screen.blit(selection_surface, selection_rect)
+        screen.blit(title_surface, title_rect)
