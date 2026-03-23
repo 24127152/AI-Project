@@ -1,9 +1,10 @@
 import pygame
 from Tile import Tile
 from Bot import Bot
+import random
 tile_size = 30
 tile = Tile(30, 30, "assets/sprites/meteor.png")
-#tile.image = pygame.transform.scale(tile.image, (96, 96))
+
 class Maze:
 
     def __init__(self, width, height, image_path):
@@ -19,6 +20,48 @@ class Maze:
             for line in file:
                 row = list(map(int, line.split()))
                 matrix.append(row)
+        return matrix
+    
+    def generate_maze(self, size):
+        """Tạo maze ngẫu nhiên với kích thước size x size, đảm bảo có đường từ start tới goal"""
+        size = max(5, int(size))
+        if size % 2 == 0:
+            size -= 1
+
+        matrix = [[1 for _ in range(size)] for _ in range(size)]
+        
+        # Tạo đường đi ngẫu nhiên bằng carving path
+        visited = [[False for _ in range(size)] for _ in range(size)]
+        
+        def carve_path(x, y):
+            visited[y][x] = True
+            matrix[y][x] = 0
+            
+            directions = [(0, -2), (2, 0), (0, 2), (-2, 0)]
+            random.shuffle(directions)
+            
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < size and 0 <= ny < size and not visited[ny][nx]:
+                    matrix[y + dy//2][x + dx//2] = 0
+                    carve_path(nx, ny)
+        
+        carve_path(1, 1)
+        
+        # Đảm bảo có đường từ cửa vào tới cửa ra (hành lang chữ L)
+        for j in range(1, size - 1):
+            matrix[1][j] = 0
+        for i in range(1, size - 1):
+            matrix[i][size - 2] = 0
+
+        # Cửa vào bên trái và cửa ra bên phải
+        matrix[1][0] = 2
+        matrix[size - 2][size - 1] = 3
+
+        # Mở ô ngay trong cửa để nhân vật đi vào/ra
+        matrix[1][1] = 0
+        matrix[size - 2][size - 2] = 0
+        
         return matrix
 
     def draw_maze(self, matrix, screen, x, y, bot):

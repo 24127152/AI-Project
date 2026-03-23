@@ -5,6 +5,11 @@ LEGEND_ASSETS = None
 
 class Star:
     def __init__(self, width, height):
+        self.base_width = width
+        self.base_height = height
+        self._load_frames(width, height)
+
+    def _load_frames(self, width, height):
         sheet = pygame.image.load("assets/sprites/Star.png").convert_alpha()
         frames_count = 13
 
@@ -21,6 +26,12 @@ class Star:
         self.current_frame = 0
         self.frame_duration_ms = 60
         self.last_tick = pygame.time.get_ticks()
+    
+    def update_size(self, width, height):
+        #Cập nhật kích thước star
+        self.base_width = width
+        self.base_height = height
+        self._load_frames(width, height)
 
     def update(self):
         now = pygame.time.get_ticks()

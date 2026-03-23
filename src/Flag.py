@@ -1,12 +1,19 @@
 import pygame
 class Flag:
     def __init__(self, width, height):
-        # Assuming you have a sprite sheet for the flag animation
+        #Sprites hoạt họa cờ
+        sheet = pygame.image.load("assets/sprites/flag.png").convert_alpha()
+        self.base_width = width
+        self.base_height = height
+        self._load_frames(width, height)
+
+    def _load_frames(self, width, height):
         sheet = pygame.image.load("assets/sprites/flag.png").convert_alpha()
         #Điều chỉnh tỉ lệ
         sheet = pygame.transform.smoothscale(sheet, (width * 5, height))  
         frame_size = sheet.get_size()
-        self.width = frame_size[0] // 5  # Assuming 5 frames horizontally
+        #5 sprites hoạt họa 
+        self.width = frame_size[0] // 5  
         self.height = frame_size[1]
 
         self.frames = []
@@ -19,6 +26,12 @@ class Flag:
         self.current_frame = 0
         self.frame_duration_ms = 60
         self.last_tick = pygame.time.get_ticks()
+    
+    def update_size(self, width, height):
+        #Cập nhật kích thước flag
+        self.base_width = width
+        self.base_height = height
+        self._load_frames(width, height)
 
     def update(self):
         now = pygame.time.get_ticks()

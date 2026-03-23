@@ -8,7 +8,7 @@ class StatsPanel:
             "Time": "N/A"
         }
         self.image = pygame.image.load("assets/sprites/stats_panel.png")
-        self.image = pygame.transform.scale(self.image, (350, 300))
+        self.image = pygame.transform.scale(self.image, (350, 270))
 
     def update_stats(self, algorithm, result, path_length, execution_time):
         self.stats["Algorithm"] = algorithm

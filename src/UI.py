@@ -75,6 +75,33 @@ if __name__ == "__main__":
     start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
     running = True
     algorithm_running = False
+    
+    #Điều chính kích thước ma trận
+    def resize_maze(new_size):
+        global matrix, start, goal, algorithm_running, path, pending_path, exploration_order, exploration_progress
+        algorithm_running = False
+        path = []
+        pending_path = []
+        exploration_order = []
+        exploration_progress = 0
+        
+        # Tạo maze mới
+        matrix = maze.generate_maze(new_size)
+        
+        # Tìm start và goal mới
+        start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
+        
+        # Reset bot
+        bot.path = []
+        bot.path_index = 0
+        bot.is_moving = False
+        
+        # Đặt bot ở vị trí start
+        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
+        bot.set_position(start[1] * maze.node_width + offset_x,
+                         start[0] * maze.node_height + offset_y)
+    
     def start_algorithm(bot):
         global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete
          
@@ -192,10 +219,11 @@ if __name__ == "__main__":
     volume_btn = Button(1000, 10, 40, 40, *volume_on_imgs, onclick=toggle_volume)
 
     #Tạo thanh trượt chỉnh kích thước grid
-    slider =  Slider(500, 150, 200, 5, min_value=8, max_value=15, initial_value=10)
+    slider = Slider(500, 150, 200, 5, min_value=9, max_value=15, initial_value=9, on_apply=resize_maze)
     #Vẽ lá cờ Goal
     goal_flag = Flag(50, 50)
     start_flag = Star(50, 50)
+    
     while running:
         
         #Vẽ nền và mê cung
@@ -212,14 +240,16 @@ if __name__ == "__main__":
 
         slider.draw(screen)
 
-        #Vẽ cờ goal
-        goal_flag.draw(screen, goal[1] * maze.node_width + (WIDTH - len(matrix[0]) * maze.node_width) // 2 + maze.node_width,
-                            goal[0] * maze.node_height + (HEIGHT - len(matrix) * maze.node_height) // 2 - maze.node_height)
         #Vẽ panel thống kê
         stats_panel.draw(screen)
+        
         #Vẽ cờ bắt đầu
-        start_flag.draw(screen, start[1] * maze.node_width + (WIDTH - len(matrix[0]) * maze.node_width) // 2 - maze.node_width // 2,
-                             start[0] * maze.node_height + (HEIGHT - len(matrix) * maze.node_height) // 2 + maze.node_height // 2)
+        start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        start_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
+        start_tile_x = start_offset_x + start[1] * maze.node_width
+        start_tile_y = start_offset_y + start[0] * maze.node_height
+        start_flag.draw(screen, start_tile_x + maze.node_width // 2,
+                             start_tile_y + maze.node_height // 2)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -258,6 +288,14 @@ if __name__ == "__main__":
         draw_path_progression(screen, matrix, bot.path, bot.path_index, WIDTH, HEIGHT, maze.node_width)
         bot.draw(screen)
 
+        #Vẽ cờ goal
+        goal_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        goal_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
+        goal_tile_x = goal_offset_x + goal[1] * maze.node_width
+        goal_tile_y = goal_offset_y + goal[0] * maze.node_height
+        goal_flag.draw(screen, goal_tile_x + maze.node_width // 2,
+                                goal_tile_y + maze.node_height // 2 - goal_flag.height // 2)
+        
         #Cập nhật thông số
         stats_panel.update_stats(
             algorithm=f"{algorithms}",
