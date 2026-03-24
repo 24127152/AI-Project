@@ -26,7 +26,7 @@ class Bot:
         for i in range(self.frame_count):
             frame = self.animate.subsurface((i * self.frame_width, 0, self.frame_width, self.frame_height)).copy()
 
-            # Crop transparent margins so the animated sprite keeps a consistent visual size.
+            # Loại bỏ phần trong suốt xung quanh bot để tránh vẽ những pixel thừa khi di chuyển
             content_rect = frame.get_bounding_rect(min_alpha=1)
             if content_rect.width > 0 and content_rect.height > 0:
                 frame = frame.subsurface(content_rect).copy()
@@ -70,8 +70,8 @@ class Bot:
         self.bot_y = y
     
     def update(self,x , y, matrix):
-        W = len(matrix[0]) * tile_size
-        H = len(matrix) * tile_size
+        W = len(matrix[0]) * self.node_width
+        H = len(matrix) * self.node_height
         offset_x = (x - W) // 2
         offset_y = (y - H) // 2
         moved = False

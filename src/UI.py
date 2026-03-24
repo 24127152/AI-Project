@@ -15,7 +15,7 @@ import time
 
 #Hàm vẽ dường đi
 def draw_path_progression(screen, matrix, path, progress_index, width, height, tile_size):
-    if not path:
+    if not path or progress_index < 0:
         return
 
     W = len(matrix[0]) * tile_size
@@ -68,22 +68,30 @@ if __name__ == "__main__":
     pending_path = []
     exploration_order = []
     exploration_progress = 0
-    explore_nodes_per_frame = 2
+    explore_nodes_per_frame = 1
     
     #Tạo bot
     bot = Bot("assets/sprites/bot.png", path, maze.node_width, maze.node_height)
     start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
     running = True
     algorithm_running = False
+    animation_phase = None
+
+    def move_bot_to_start():
+        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
+        bot.set_position(start[1] * maze.node_width + offset_x,
+                         start[0] * maze.node_height + offset_y)
     
     #Điều chính kích thước ma trận
     def resize_maze(new_size):
-        global matrix, start, goal, algorithm_running, path, pending_path, exploration_order, exploration_progress
+        global matrix, start, goal, algorithm_running, path, pending_path, exploration_order, exploration_progress, animation_phase
         algorithm_running = False
         path = []
         pending_path = []
         exploration_order = []
         exploration_progress = 0
+        animation_phase = None
         
         # Tạo maze mới
         matrix = maze.generate_maze(new_size)
@@ -97,16 +105,13 @@ if __name__ == "__main__":
         bot.is_moving = False
         
         # Đặt bot ở vị trí start
-        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
-        offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
-        bot.set_position(start[1] * maze.node_width + offset_x,
-                         start[0] * maze.node_height + offset_y)
+        move_bot_to_start()
     
     def start_algorithm(bot):
-        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete
+        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
          
         if not algorithm_running:
-            start_perf = time.perf_counter()
+           
             #Lựa chọn thuật toán
             if algorithms == "A Star":
                 result = A_search(matrix, start, goal)
@@ -136,32 +141,44 @@ if __name__ == "__main__":
 
             pending_path = path[:]
             exploration_progress = 0
+            move_bot_to_start()
             bot.path = []
             bot.path_index = 0
-            algorithm_running = True
-            algorithm_complete = False
-            bot.is_moving = True
 
-        if not exploration_order:
-            algorithm_complete = True
+            # Chạy 2 phase: vẽ explored nodes trước, sau đó bot mới đi final path.
+            if exploration_order:
+                animation_phase = "exploring"
+                algorithm_running = True
+                algorithm_complete = False
+                bot.is_moving = False
+            elif pending_path:
+                bot.path = pending_path
+                animation_phase = "final"
+                algorithm_running = True
+                algorithm_complete = False
+                bot.is_moving = True
+            else:
+                bot.path = []
+                animation_phase = None
+                algorithm_running = False
+                algorithm_complete = True
+                bot.is_moving = False
         
             
     #Reset thuật toán
     def restart_algorithm(bot):
-        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete
+        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
         path = []
         pending_path = []
         exploration_order = []
         exploration_progress = 0
+        animation_phase = None
         bot.path = path
         bot.is_moving = False
         bot.path_index = 0
         algorithm_running = False
         time_taken = None
-        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
-        offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
-        bot.set_position(start[1] * maze.node_width + offset_x,
-                         start[0] * maze.node_height + offset_y)
+        move_bot_to_start()
         algorithm_complete = False
 
     #Tạo nút start
@@ -243,13 +260,6 @@ if __name__ == "__main__":
         #Vẽ panel thống kê
         stats_panel.draw(screen)
         
-        #Vẽ cờ bắt đầu
-        start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
-        start_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
-        start_tile_x = start_offset_x + start[1] * maze.node_width
-        start_tile_y = start_offset_y + start[0] * maze.node_height
-        start_flag.draw(screen, start_tile_x + maze.node_width // 2,
-                             start_tile_y + maze.node_height // 2)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -265,27 +275,54 @@ if __name__ == "__main__":
         #Vẽ ma trận và đường đi
         maze.draw_maze(matrix, screen, WIDTH, HEIGHT, bot)
 
-        #Vẽ tiến trình đi
-        if algorithm_running and exploration_progress < len(exploration_order):
+        # Vẽ explored path từ từ theo frame, bot chưa di chuyển trong phase này.
+        if animation_phase == "exploring":
             exploration_progress = min(exploration_progress + explore_nodes_per_frame, len(exploration_order))
+        elif exploration_order:
+            exploration_progress = len(exploration_order)
 
         draw_search_progression(screen, matrix, exploration_order, exploration_progress, WIDTH, HEIGHT, maze.node_width)
 
-        if algorithm_running and exploration_progress >= len(exploration_order):
-            if not bot.path and pending_path:
+        if algorithm_running and animation_phase == "exploring" and exploration_progress >= len(exploration_order):
+            if pending_path:
+                move_bot_to_start()
                 bot.path = pending_path
                 bot.path_index = 0
+                bot.is_moving = True
+                animation_phase = "final"
+            else:
+                algorithm_running = False
+                algorithm_complete = True
+                animation_phase = None
 
-        if algorithm_running and bot.path:
+        if algorithm_running and animation_phase == "final" and bot.path:
             bot.update(WIDTH, HEIGHT, matrix)
             if bot.path_index >= len(bot.path):
                 algorithm_running = False
                 algorithm_complete = True
-        elif algorithm_running and not pending_path and exploration_progress >= len(exploration_order):
+                animation_phase = None
+        elif algorithm_running and animation_phase == "final" and not bot.path:
             algorithm_running = False
             algorithm_complete = True
+            animation_phase = None
 
-        draw_path_progression(screen, matrix, bot.path, bot.path_index, WIDTH, HEIGHT, maze.node_width)
+        final_progress = -1
+        if animation_phase == "final":
+            final_progress = bot.path_index
+        elif algorithm_complete and pending_path:
+            final_progress = len(pending_path) - 1
+
+        draw_path_progression(screen, matrix, pending_path, final_progress, WIDTH, HEIGHT, maze.node_width)
+
+        #Vẽ cờ bắt đầu
+        start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        start_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
+        start_tile_x = start_offset_x + start[1] * maze.node_width
+        start_tile_y = start_offset_y + start[0] * maze.node_height
+        start_flag.draw(screen, start_tile_x + maze.node_width // 2,
+                             start_tile_y + maze.node_height // 2)
+
+        #Vẽ bot
         bot.draw(screen)
 
         #Vẽ cờ goal
