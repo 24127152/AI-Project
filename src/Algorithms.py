@@ -3,7 +3,17 @@ import math
 import time
 
 WALL_VALUE = 1
-WALKABLE_VALUES = {0, 2, 3}
+MONSTER_COST_VALUE = 5
+PLANT_COST_VALUE = 6
+WALKABLE_VALUES = {0, 2, 3, MONSTER_COST_VALUE, PLANT_COST_VALUE}
+
+
+def get_cell_cost(cell_value):
+    if cell_value == MONSTER_COST_VALUE:
+        return MONSTER_COST_VALUE
+    if cell_value == PLANT_COST_VALUE:
+        return PLANT_COST_VALUE
+    return 1
 
 
 def Heuristic(node, goal):
@@ -61,7 +71,7 @@ def UCS(grid, start, goal):
                 neighbor_value = grid[neighbor[0]][neighbor[1]]
                 
                 if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
-                    step_cost = 1
+                    step_cost = get_cell_cost(neighbor_value)
                     new_cost = current_cost + step_cost
                     heapq.heappush(priority_queue, (new_cost, neighbor, path + [neighbor]))
                 
@@ -125,7 +135,7 @@ def A_search(grid, start, goal):
             if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
                 neighbor_value = grid[neighbor[0]][neighbor[1]]
                 if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
-                    step_cost = 1
+                    step_cost = get_cell_cost(neighbor_value)
                     new_g_cost = current_g_cost + step_cost
                     new_f_cost = new_g_cost + Heuristic(neighbor, goal)
                     heapq.heappush(priority_queue, (new_f_cost, new_g_cost, neighbor, path + [neighbor]))
@@ -193,7 +203,7 @@ def Beam_search(grid, start, goal, beam_width=2):
                     neighbor_value = grid[neighbor[0]][neighbor[1]]
                     
                     if neighbor_value in WALKABLE_VALUES and neighbor not in explored_nodes:
-                        step_cost = 1
+                        step_cost = get_cell_cost(neighbor_value)
                         new_g_cost = current_g_cost + step_cost
                         new_f_cost = new_g_cost + Heuristic(neighbor, goal)
                         next_beam.append((new_f_cost, new_g_cost, neighbor, path + [neighbor]))

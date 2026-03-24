@@ -5,15 +5,17 @@ class StatsPanel:
             "Algorithm": "N/A",
             "Result": "N/A",
             "Path length": "N/A",
+            "Path cost": "N/A",
             "Time": "N/A"
         }
         self.image = pygame.image.load("assets/sprites/stats_panel.png")
-        self.image = pygame.transform.scale(self.image, (350, 270))
+        self.image = pygame.transform.scale(self.image, (350, 300))
 
-    def update_stats(self, algorithm, result, path_length, execution_time):
+    def update_stats(self, algorithm, result, path_length, execution_time, path_cost=None):
         self.stats["Algorithm"] = algorithm
         self.stats["Result"] = result
         self.stats["Path length"] = path_length
+        self.stats["Path cost"] = path_cost if path_cost is not None else "N/A"
         self.stats["Time"] = f"{execution_time:4f} sec" if execution_time is not None else "N/A"
 
     def draw(self, screen):
@@ -27,7 +29,7 @@ class StatsPanel:
         for key, value in self.stats.items():
             text = f"{key}: {value}"
             text_surface = font.render(text, True, (224, 255, 255))
-            screen.blit(text_surface, (20, y_offset + 40))
+            screen.blit(text_surface, (20, y_offset + 35))
             y_offset += 35
 
     

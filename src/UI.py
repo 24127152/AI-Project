@@ -1,7 +1,10 @@
 import pygame 
+import random
 from Maze import Maze
 from Background import Background
 from Bot import Bot
+from Monster import Monster
+from Plant import Plant
 from IDA import ida_star
 from Algorithms import A_search, UCS, Beam_search
 from Button import Button
@@ -12,6 +15,28 @@ from Flag import Flag
 from LegendPanel import draw_legend_panel, Star
 from Slider import Slider
 import time
+import random
+
+MONSTER_COST_VALUE = 5
+PLANT_COST_VALUE = 6
+
+
+def get_cell_cost(cell_value):
+    if cell_value == MONSTER_COST_VALUE:
+        return MONSTER_COST_VALUE
+    if cell_value == PLANT_COST_VALUE:
+        return PLANT_COST_VALUE
+    return 1
+
+
+def calculate_path_cost(matrix, path):
+    if not path:
+        return None
+
+    total_cost = 0
+    for row, col in path[1:]:
+        total_cost += get_cell_cost(matrix[row][col])
+    return total_cost
 
 #Hàm vẽ dường đi
 def draw_path_progression(screen, matrix, path, progress_index, width, height, tile_size):
@@ -47,6 +72,54 @@ def draw_search_progression(screen, matrix, explored_nodes, progress_index, widt
         y = offset_y + i * tile_size + tile_size // 2 - 4
         pygame.draw.rect(screen, (64, 196, 255), (x, y, 8, 8))
 
+
+def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size):
+    candidates = []
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            if value == 0 and (i, j) != start and (i, j) != goal:
+                candidates.append((i, j))
+
+    if not candidates:
+        return None, None
+
+    monster_row, monster_col = random.choice(candidates)
+    matrix[monster_row][monster_col] = MONSTER_COST_VALUE
+
+    maze_width_px = len(matrix[0]) * tile_size
+    maze_height_px = len(matrix) * tile_size
+    offset_x = (width - maze_width_px) // 2
+    offset_y = (height - maze_height_px) // 2
+
+    monster_x = offset_x + monster_col * tile_size
+    monster_y = offset_y + monster_row * tile_size
+    monster = Monster(monster_x, monster_y, tile_size, tile_size)
+    return monster, (monster_row, monster_col)
+
+
+def spawn_plant_in_maze(matrix, start, goal, width, height, tile_size):
+    candidates = []
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            if value == 0 and (i, j) != start and (i, j) != goal:
+                candidates.append((i, j))
+
+    if not candidates:
+        return None, None
+
+    plant_row, plant_col = random.choice(candidates)
+    matrix[plant_row][plant_col] = PLANT_COST_VALUE
+
+    maze_width_px = len(matrix[0]) * tile_size
+    maze_height_px = len(matrix) * tile_size
+    offset_x = (width - maze_width_px) // 2
+    offset_y = (height - maze_height_px) // 2
+
+    plant_x = offset_x + plant_col * tile_size
+    plant_y = offset_y + plant_row * tile_size
+    plant = Plant(plant_x, plant_y, tile_size, tile_size)
+    return plant, (plant_row, plant_col)
+
 if __name__ == "__main__":
 
     WIDTH = 1200
@@ -65,6 +138,7 @@ if __name__ == "__main__":
 
     stats_panel = StatsPanel()
     path = []
+    total_path_cost = None
     pending_path = []
     exploration_order = []
     exploration_progress = 0
@@ -73,6 +147,16 @@ if __name__ == "__main__":
     #Tạo bot
     bot = Bot("assets/sprites/bot.png", path, maze.node_width, maze.node_height)
     start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
+    monsters = []
+    plants = []
+    spawn_count = random.randrange(1, max(2, len(matrix) // 2))
+    for _ in range(spawn_count):
+        monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+        plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+        if monster is not None:
+            monsters.append(monster)
+        if plant is not None:
+            plants.append(plant)
     running = True
     algorithm_running = False
     animation_phase = None
@@ -85,9 +169,10 @@ if __name__ == "__main__":
     
     #Điều chính kích thước ma trận
     def resize_maze(new_size):
-        global matrix, start, goal, algorithm_running, path, pending_path, exploration_order, exploration_progress, animation_phase
+        global matrix, start, goal, algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, animation_phase, monsters, plants
         algorithm_running = False
         path = []
+        total_path_cost = None
         pending_path = []
         exploration_order = []
         exploration_progress = 0
@@ -98,6 +183,18 @@ if __name__ == "__main__":
         
         # Tìm start và goal mới
         start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
+
+        #Spawn theo kích thước ma trận mới, spawn nhiều hơn khi kích thước lớn hơn
+        monsters = []
+        plants = []
+        spawn_count = random.randrange(1, max(2, len(matrix) // 2))
+        for _ in range(spawn_count):
+            monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+            plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+            if monster is not None:
+                monsters.append(monster)
+            if plant is not None:
+                plants.append(plant)
         
         # Reset bot
         bot.path = []
@@ -108,7 +205,7 @@ if __name__ == "__main__":
         move_bot_to_start()
     
     def start_algorithm(bot):
-        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
          
         if not algorithm_running:
            
@@ -116,25 +213,30 @@ if __name__ == "__main__":
             if algorithms == "A Star":
                 result = A_search(matrix, start, goal)
                 path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "IDA Star":
                 result = ida_star(matrix, start, goal, return_details=True)
                 path = result["path_found"] or []
+                total_path_cost = calculate_path_cost(matrix, path)
                 exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "UCS":
                 result = UCS(matrix, start, goal)
                 path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "Beam Search":
                 result = Beam_search(matrix, start, goal)
                 path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
             else:
                 path = []
+                total_path_cost = None
                 exploration_order = []
                 end_time = time.perf_counter()
                 time_taken = end_time - start_perf
@@ -167,8 +269,9 @@ if __name__ == "__main__":
             
     #Reset thuật toán
     def restart_algorithm(bot):
-        global algorithm_running, path, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
         path = []
+        total_path_cost = None
         pending_path = []
         exploration_order = []
         exploration_progress = 0
@@ -324,6 +427,10 @@ if __name__ == "__main__":
 
         #Vẽ bot
         bot.draw(screen)
+        for monster in monsters:
+            monster.draw(screen)
+        for plant in plants:
+            plant.draw(screen)
 
         #Vẽ cờ goal
         goal_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
@@ -338,7 +445,8 @@ if __name__ == "__main__":
             algorithm=f"{algorithms}",
             result="Success" if algorithm_complete and len(path) > 0 else "Failure" if algorithm_complete and len(path) == 0 else "N/A",
             path_length=len(path) if path is not None and algorithm_complete else "N/A",
-            execution_time=time_taken
+            execution_time=time_taken,
+            path_cost=total_path_cost if algorithm_complete else "N/A"
         )
         pygame.display.flip()
 
