@@ -16,6 +16,7 @@ from LegendPanel import draw_legend_panel, Star
 from Slider import Slider
 import time
 import random
+from project import DFS, Bidirectional_bfs
 
 MONSTER_COST_VALUE = 5
 PLANT_COST_VALUE = 6
@@ -234,6 +235,20 @@ if __name__ == "__main__":
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
+
+            elif algorithms == "DFS":
+                result = DFS(matrix, start, goal)
+                path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
+                exploration_order = result.get("exploration_order", [])
+                time_taken = result["processing_time_us"] / 1000000
+
+            elif algorithms == "BDS":
+                result = Bidirectional_bfs(matrix, start, goal)
+                path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
+                exploration_order = result.get("exploration_order", [])
+                time_taken = result["processing_time_us"] / 1000000
             else:
                 path = []
                 total_path_cost = None
