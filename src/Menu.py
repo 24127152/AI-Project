@@ -1,5 +1,6 @@
 import pygame
 import os
+import math
 from Button import Button
 # Hàm load ảnh an toàn
 def load_img_safe(path, size, fallback_color=(150, 0, 150)):
@@ -84,8 +85,11 @@ class MainMenu:
 
         title_text = self.title_font.render("MAZE SOLVER", True, (255, 255, 255))
 
-        # Vẽ chữ tĩnh, không hiệu ứng dao động.
-        screen.blit(title_text, (self.width//2 - title_text.get_width()//2, 120))
+        # Hiệu ứng lơ lửng cho tiêu đề.
+        current_time = pygame.time.get_ticks()
+        offset_y = math.sin(current_time * 0.003) * 15
+        title_y = 120 + offset_y
+        screen.blit(title_text, (self.width//2 - title_text.get_width()//2, title_y))
         
         self.btn_play.draw(screen)
         self.btn_quit.draw(screen)
