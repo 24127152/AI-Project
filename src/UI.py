@@ -5,8 +5,7 @@ from Background import Background
 from Bot import Bot
 from Monster import Monster
 from Plant import Plant
-from IDA import ida_star
-from Algorithms import A_search, UCS, Beam_search
+from Algorithms import A_search, UCS, Beam_search, Bidirectional_bfs, DFS, ida_star
 from Button import Button
 from AlgoCard import AlgoCard
 from StatsPanel import StatsPanel
@@ -15,7 +14,7 @@ from Flag import Flag
 from LegendPanel import draw_legend_panel, Star
 from Slider import Slider
 import time
-from project import DFS, Bidirectional_bfs
+
 
 #sửa: Import Menu và hàm load ảnh
 from Menu import MainMenu, load_img_safe
@@ -23,6 +22,7 @@ from Menu import MainMenu, load_img_safe
 
 MONSTER_COST_VALUE = 5
 PLANT_COST_VALUE = 6
+MAZE_SHIFT_X = 180
 
 
 def get_cell_cost(cell_value):
@@ -43,13 +43,13 @@ def calculate_path_cost(matrix, path):
     return total_cost
 
 #Hàm vẽ dường đi
-def draw_path_progression(screen, matrix, path, progress_index, width, height, tile_size):
+def draw_path_progression(screen, matrix, path, progress_index, width, height, tile_size, maze_shift_x=0):
     if not path or progress_index < 0:
         return
 
     W = len(matrix[0]) * tile_size
     H = len(matrix) * tile_size
-    offset_x = (width - W) // 2
+    offset_x = (width - W) // 2 + maze_shift_x
     offset_y = (height - H) // 2
 
     last = min(progress_index, len(path) - 1)
@@ -60,13 +60,13 @@ def draw_path_progression(screen, matrix, path, progress_index, width, height, t
         pygame.draw.rect(screen, (255, 215, 0), (x, y, 10, 10))
 
 
-def draw_search_progression(screen, matrix, explored_nodes, progress_index, width, height, tile_size):
+def draw_search_progression(screen, matrix, explored_nodes, progress_index, width, height, tile_size, maze_shift_x=0):
     if not explored_nodes:
         return
 
     W = len(matrix[0]) * tile_size
     H = len(matrix) * tile_size
-    offset_x = (width - W) // 2
+    offset_x = (width - W) // 2 + maze_shift_x
     offset_y = (height - H) // 2
 
     last = min(progress_index, len(explored_nodes) - 1)
@@ -77,7 +77,7 @@ def draw_search_progression(screen, matrix, explored_nodes, progress_index, widt
         pygame.draw.rect(screen, (64, 196, 255), (x, y, 8, 8))
 
 
-def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size):
+def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size, maze_shift_x=0):
     candidates = []
     for i, row in enumerate(matrix):
         for j, value in enumerate(row):
@@ -92,7 +92,7 @@ def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size):
 
     maze_width_px = len(matrix[0]) * tile_size
     maze_height_px = len(matrix) * tile_size
-    offset_x = (width - maze_width_px) // 2
+    offset_x = (width - maze_width_px) // 2 + maze_shift_x
     offset_y = (height - maze_height_px) // 2
 
     monster_x = offset_x + monster_col * tile_size
@@ -101,7 +101,7 @@ def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size):
     return monster, (monster_row, monster_col)
 
 
-def spawn_plant_in_maze(matrix, start, goal, width, height, tile_size):
+def spawn_plant_in_maze(matrix, start, goal, width, height, tile_size, maze_shift_x=0):
     candidates = []
     for i, row in enumerate(matrix):
         for j, value in enumerate(row):
@@ -116,7 +116,7 @@ def spawn_plant_in_maze(matrix, start, goal, width, height, tile_size):
 
     maze_width_px = len(matrix[0]) * tile_size
     maze_height_px = len(matrix) * tile_size
-    offset_x = (width - maze_width_px) // 2
+    offset_x = (width - maze_width_px) // 2 + maze_shift_x
     offset_y = (height - maze_height_px) // 2
 
     plant_x = offset_x + plant_col * tile_size
@@ -126,7 +126,7 @@ def spawn_plant_in_maze(matrix, start, goal, width, height, tile_size):
 
 if __name__ == "__main__":
 
-    WIDTH = 1200
+    WIDTH = 1400
     HEIGHT = 800
     pygame.init()
     #Âm thanh nền
@@ -162,13 +162,13 @@ if __name__ == "__main__":
     
     #Tạo bot
     bot = Bot("assets/sprites/bot.png", path, maze.node_width, maze.node_height)
-    start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
+    start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT, MAZE_SHIFT_X)
     monsters = []
     plants = []
     spawn_count = random.randrange(1, max(2, len(matrix) // 2))
     for _ in range(spawn_count):
-        monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
-        plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+        monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
+        plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
         if monster is not None:
             monsters.append(monster)
         if plant is not None:
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     animation_phase = None
 
     def move_bot_to_start():
-        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+        offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2 + MAZE_SHIFT_X
         offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
         bot.set_position(start[1] * maze.node_width + offset_x,
                          start[0] * maze.node_height + offset_y)
@@ -198,15 +198,15 @@ if __name__ == "__main__":
         matrix = maze.generate_maze(new_size)
         
         # Tìm start và goal mới
-        start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT)
+        start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT, MAZE_SHIFT_X)
 
         #Spawn theo kích thước ma trận mới, spawn nhiều hơn khi kích thước lớn hơn
         monsters = []
         plants = []
         spawn_count = random.randrange(1, max(2, len(matrix) // 2))
         for _ in range(spawn_count):
-            monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
-            plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width)
+            monster, monster_pos = spawn_monster_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
+            plant, plant_pos = spawn_plant_in_maze(matrix, start, goal, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
             if monster is not None:
                 monsters.append(monster)
             if plant is not None:
@@ -314,17 +314,27 @@ if __name__ == "__main__":
         move_bot_to_start()
         algorithm_complete = False
 
-    #sửa: Chỉnh tọa độ 3 nút điều khiển (Play - Back - Retry) nằm cân đối ở giữa màn hình
-    #Nút Start (X=400)
-    img_normal = pygame.image.load("assets/sprites/play_normal.png")
+    # Bố cục nút điều khiển đặt bên phải legend panel
+    legend_anchor_x = 500
+    legend_anchor_y = 700
+    legend_panel_x = legend_anchor_x - 490
+    legend_panel_y = legend_anchor_y - 450
+    legend_panel_width = 240
+
+    control_btn_x = legend_panel_x + legend_panel_width + 20
+    control_btn_y_start = legend_panel_y + 170
+    control_btn_gap = 10
+
+    #Nút Start
+    img_normal = pygame.image.load("assets/sprites/start_normal.png")
     img_normal = pygame.transform.scale(img_normal, (120, 50))
-    img_hover = pygame.image.load("assets/sprites/play_hover.png")
+    img_hover = pygame.image.load("assets/sprites/start_hover.png")
     img_hover = pygame.transform.scale(img_hover, (120, 50))
-    img_pressed = pygame.image.load("assets/sprites/play_pressed.png")
+    img_pressed = pygame.image.load("assets/sprites/start_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_start = Button(400, 650, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
+    btn_start = Button(control_btn_x, control_btn_y_start, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
     
-    #Nút Back (X=550) - Hàm quay về Menu
+    #Nút Back - Hàm quay về Menu
     def back_to_menu():
         global game_state
         game_state = "MENU"
@@ -333,20 +343,20 @@ if __name__ == "__main__":
     img_back_normal = load_img_safe("assets/sprites/back_normal.png", (120, 50))
     img_back_hover = load_img_safe("assets/sprites/back_hover.png", (120, 50))
     img_back_pressed = load_img_safe("assets/sprites/back_pressed.png", (120, 50))
-    btn_back_game = Button(550, 650, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
+    btn_back_game = Button(control_btn_x, control_btn_y_start + 50 + control_btn_gap, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
 
-    #Nút Restart (X=700)
+    #Nút Restart
     img_normal = pygame.image.load("assets/sprites/retry_normal.png")
     img_normal = pygame.transform.scale(img_normal, (120, 50))
     img_hover = pygame.image.load("assets/sprites/retry_hover.png")
     img_hover = pygame.transform.scale(img_hover, (120, 50))
     img_pressed = pygame.image.load("assets/sprites/retry_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_restart = Button(700, 650, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
+    btn_restart = Button(control_btn_x, control_btn_y_start + (50 + control_btn_gap) * 2, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
     #sửa xong
 
-    #Algorithms selcection Card
-    selection_card = AlgoCard()
+    # Algorithms selection card và slider đặt ở góc trái dưới.
+    selection_card = AlgoCard(panel_x=20, panel_y=HEIGHT - 170)
     algorithms = selection_card.selected_algorithm
     algorithm_complete = False
     time_taken = None
@@ -381,10 +391,10 @@ if __name__ == "__main__":
         #Set âm lượng của âm thanh nền
         nature_sound.set_volume(1 if is_volume_on else 0)
 
-    volume_btn = Button(1000, 10, 40, 40, *volume_on_imgs, onclick=toggle_volume)
+    volume_btn = Button(1300, 10, 40, 40, *volume_on_imgs, onclick=toggle_volume)
 
-    #Tạo thanh trượt chỉnh kích thước grid
-    slider = Slider(500, 150, 200, 5, min_value=9, max_value=15, initial_value=9, on_apply=resize_maze)
+    #Tạo thanh trượt chỉnh kích thước grid (số lẻ từ 9 đến 25), đặt phía trên nút Start
+    slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=25, initial_value=9, on_apply=resize_maze)
     #Vẽ lá cờ Goal
     goal_flag = Flag(50, 50)
     start_flag = Star(50, 50)
@@ -408,7 +418,7 @@ if __name__ == "__main__":
             earth.draw(screen)
             selection_card.draw(screen)
             #Vẽ panel chú thích
-            draw_legend_panel(screen, 500, 700)
+            draw_legend_panel(screen, legend_anchor_x, legend_anchor_y)
 
             slider.draw(screen)
 
@@ -416,7 +426,7 @@ if __name__ == "__main__":
             stats_panel.draw(screen)
             
             #Vẽ cờ bắt đầu
-            start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+            start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2 + MAZE_SHIFT_X
             start_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
             start_tile_x = start_offset_x + start[1] * maze.node_width
             start_tile_y = start_offset_y + start[0] * maze.node_height
@@ -424,7 +434,7 @@ if __name__ == "__main__":
                                  start_tile_y + maze.node_height // 2)
 
             #Vẽ ma trận và đường đi
-            maze.draw_maze(matrix, screen, WIDTH, HEIGHT, bot)
+            maze.draw_maze(matrix, screen, WIDTH, HEIGHT, bot, MAZE_SHIFT_X)
 
             # Vẽ explored path từ từ theo frame, bot chưa di chuyển trong phase này.
             if animation_phase == "exploring":
@@ -432,7 +442,7 @@ if __name__ == "__main__":
             elif exploration_order:
                 exploration_progress = len(exploration_order)
 
-            draw_search_progression(screen, matrix, exploration_order, exploration_progress, WIDTH, HEIGHT, maze.node_width)
+            draw_search_progression(screen, matrix, exploration_order, exploration_progress, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
 
             if algorithm_running and animation_phase == "exploring" and exploration_progress >= len(exploration_order):
                 if pending_path:
@@ -447,7 +457,7 @@ if __name__ == "__main__":
                     animation_phase = None
 
             if algorithm_running and animation_phase == "final" and bot.path:
-                bot.update(WIDTH, HEIGHT, matrix)
+                bot.update(WIDTH, HEIGHT, matrix, MAZE_SHIFT_X)
                 if bot.path_index >= len(bot.path):
                     algorithm_running = False
                     algorithm_complete = True
@@ -463,10 +473,10 @@ if __name__ == "__main__":
             elif algorithm_complete and pending_path:
                 final_progress = len(pending_path) - 1
 
-            draw_path_progression(screen, matrix, pending_path, final_progress, WIDTH, HEIGHT, maze.node_width)
+            draw_path_progression(screen, matrix, pending_path, final_progress, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
 
             #Vẽ cờ bắt đầu (đè lên nếu cần)
-            start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+            start_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2 + MAZE_SHIFT_X
             start_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
             start_tile_x = start_offset_x + start[1] * maze.node_width
             start_tile_y = start_offset_y + start[0] * maze.node_height
@@ -481,7 +491,7 @@ if __name__ == "__main__":
                 plant.draw(screen)
 
             #Vẽ cờ goal
-            goal_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2
+            goal_offset_x = (WIDTH - len(matrix[0]) * maze.node_width) // 2 + MAZE_SHIFT_X
             goal_offset_y = (HEIGHT - len(matrix) * maze.node_height) // 2
             goal_tile_x = goal_offset_x + goal[1] * maze.node_width
             goal_tile_y = goal_offset_y + goal[0] * maze.node_height

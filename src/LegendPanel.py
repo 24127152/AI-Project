@@ -1,6 +1,7 @@
 import pygame
 from Flag import Flag
-
+from Monster import Monster
+from Plant import Plant
 LEGEND_ASSETS = None
 
 class Star:
@@ -52,9 +53,11 @@ def _get_legend_assets():
     if LEGEND_ASSETS is not None:
         return LEGEND_ASSETS
 
+
     icon_size = (30, 30)
     start_node_sprite = Star(30, 30)
-    
+    Slime = Monster(0, 0, 30, 30)
+    plant = Plant(0, 300, 30, 30)
 
     wall_sprite = pygame.image.load("assets/sprites/meteor.png").convert_alpha()
     wall_sprite = pygame.transform.smoothscale(wall_sprite, icon_size)
@@ -78,6 +81,8 @@ def _get_legend_assets():
         "explored_icon": explored_surface,
         "final_icon": final_surface,
         "font": font,
+        "slime_icon": Slime,
+        "plant_icon": plant
     }
     return LEGEND_ASSETS
 
@@ -85,7 +90,7 @@ def _get_legend_assets():
 def draw_legend_panel(screen, x, y):
     assets = _get_legend_assets()
     #Vị trí và kích thước panel chú thích
-    panel_rect = pygame.Rect(x - 250, y + 14, 700, 74)
+    panel_rect = pygame.Rect(x - 490, y - 450, 220, 370)
     shadow_rect = panel_rect.move(0, 3)
     pygame.draw.rect(screen, (0, 0, 0, 90), shadow_rect, border_radius=12)
     pygame.draw.rect(screen, (12, 26, 42, 220), panel_rect, border_radius=12)
@@ -98,31 +103,39 @@ def draw_legend_panel(screen, x, y):
         ("Wall", assets["wall_icon"]),
         ("Explored Path", assets["explored_icon"]),
         ("Final Path", assets["final_icon"]),
+        ("Slime", assets["slime_icon"]),
+        ("Plant", assets["plant_icon"])
     )
 
-    column_padding = 10
-    content_width = panel_rect.width - (column_padding * 2)
-    item_width = content_width / len(labels)
+
+    row_height = 50
+    icon_x = panel_rect.x + 24
+    text_x = panel_rect.x + 55
+    start_y = panel_rect.y + 22
 
     for index, (label, icon) in enumerate(labels):
-        cell_left = panel_rect.x + column_padding + (index * item_width)
-        center_x = int(cell_left + item_width / 2)
-        icon_center_y = panel_rect.y + 20
-        text_y = panel_rect.y + 48
+        row_y = start_y + index * row_height
+        icon_center_y = row_y + 15
 
         if isinstance(icon, Flag):
-            # Flag.draw dùng tọa độ topleft nên cần quy đổi từ tâm.
             frame = icon.frames[icon.current_frame]
-            icon.draw(screen, center_x - frame.get_width() // 2, icon_center_y - frame.get_height() // 2)
+            icon.draw(screen, icon_x - frame.get_width() // 2, icon_center_y - frame.get_height() // 2)
         elif isinstance(icon, Star):
-            icon.draw(screen, center_x, icon_center_y)
+            icon.draw(screen, icon_x, icon_center_y)
+        elif isinstance(icon, Monster) or isinstance(icon, Plant):
+            icon.update()
+            frame = icon.frames[icon.current_frame]
+            rect = frame.get_rect(center=(icon_x, icon_center_y))
+            screen.blit(frame, rect)
         else:
-            rect = icon.get_rect(center=(center_x, icon_center_y))
+            rect = icon.get_rect(center=(icon_x, icon_center_y))
             screen.blit(icon, rect)
 
         text_surface = assets["font"].render(label, True, (235, 245, 255))
         text_shadow = assets["font"].render(label, True, (8, 14, 24))
-        text_rect = text_surface.get_rect(center=(center_x, text_y))
+        text_rect = text_surface.get_rect(midleft=(text_x, icon_center_y + 1))
         shadow_rect = text_rect.move(1, 1)
         screen.blit(text_shadow, shadow_rect)
         screen.blit(text_surface, text_rect)
+
+       

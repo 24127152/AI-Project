@@ -64,11 +64,11 @@ class Maze:
         
         return matrix
 
-    def draw_maze(self, matrix, screen, x, y, bot):
+    def draw_maze(self, matrix, screen, x, y, bot, maze_shift_x=0):
         #Tính toán vị trí để vẽ mê cung
         W = len(matrix[0]) * tile_size
         H = len(matrix) * tile_size
-        offset_x = (x - W) // 2
+        offset_x = (x - W) // 2 + maze_shift_x
         offset_y = (y - H) // 2
 
         for i, row in enumerate(matrix):
@@ -79,11 +79,11 @@ class Maze:
                     tile.draw(screen, tile_x, tile_y)
                 
 
-    def find_pos(self, matrix, start, goal, bot, x, y):
+    def find_pos(self, matrix, start, goal, bot, x, y, maze_shift_x=0):
         #Vị trí chính xác của bot
         W = len(matrix[0]) * tile_size
         H = len(matrix) * tile_size
-        offset_x = (x - W) // 2
+        offset_x = (x - W) // 2 + maze_shift_x
         offset_y = (y - H) // 2
         for i, row in enumerate(matrix):
             for j, value in enumerate(row):

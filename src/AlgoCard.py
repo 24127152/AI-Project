@@ -50,7 +50,9 @@ class SpriteButton:
 
 
 class AlgoCard:
-    def __init__(self):
+    def __init__(self, panel_x=370, panel_y=0):
+        self.panel_x = panel_x
+        self.panel_y = panel_y
         self.panel = pygame.image.load("assets/sprites/panel.png")
         self.panel = pygame.transform.scale(self.panel, (450, 150))
 
@@ -61,7 +63,7 @@ class AlgoCard:
         left_img_hover = pygame.transform.scale(left_img_hover, (45, 45))
         left_img_pressed = pygame.image.load("assets/sprites/left_arrow_pressed.png")
         left_img_pressed = pygame.transform.scale(left_img_pressed, (45, 45))
-        left = SpriteButton(420, 55, 50, 50, left_img_normal, left_img_hover, left_img_pressed)
+        left = SpriteButton(self.panel_x + 50, self.panel_y + 55, 50, 50, left_img_normal, left_img_hover, left_img_pressed)
 
         #Vẽ nút bên phải
         right_img_normal = pygame.image.load("assets/sprites/right_arrow_normal.png")
@@ -70,7 +72,7 @@ class AlgoCard:
         right_img_hover = pygame.transform.scale(right_img_hover, (45, 45))
         right_img_pressed = pygame.image.load("assets/sprites/right_arrow_pressed.png")
         right_img_pressed = pygame.transform.scale(right_img_pressed, (45, 45))
-        right = SpriteButton(730, 55, 50, 50, right_img_normal, right_img_hover, right_img_pressed)
+        right = SpriteButton(self.panel_x + 360, self.panel_y + 55, 50, 50, right_img_normal, right_img_hover, right_img_pressed)
 
         #Tạo danh sách chứa các nút
         self.buttons = [left, right]
@@ -95,7 +97,7 @@ class AlgoCard:
             return self.selected_algorithm
 
     def draw(self, screen):
-        panel_rect = self.panel.get_rect(topleft = (370, 0))
+        panel_rect = self.panel.get_rect(topleft = (self.panel_x, self.panel_y))
         screen.blit(self.panel, panel_rect)
         for button in self.buttons:
             button.draw(screen)

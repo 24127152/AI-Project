@@ -15,7 +15,7 @@ class Bot:
         self.path = path if path is not None else []
         self.path_index = 0
         #Speed để bot di từ từ
-        self.speed = 2
+        self.speed = 5
 
         self.animate = pygame.image.load("assets/sprites/bot_animate.png").convert_alpha()
         self.is_moving = False
@@ -69,10 +69,10 @@ class Bot:
         self.bot_x = x
         self.bot_y = y
     
-    def update(self,x , y, matrix):
+    def update(self,x , y, matrix, maze_shift_x=0):
         W = len(matrix[0]) * self.node_width
         H = len(matrix) * self.node_height
-        offset_x = (x - W) // 2
+        offset_x = (x - W) // 2 + maze_shift_x
         offset_y = (y - H) // 2
         moved = False
         
