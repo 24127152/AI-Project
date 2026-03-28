@@ -3,7 +3,7 @@ from Tile import Tile
 from Bot import Bot
 import random
 tile_size = 30
-tile = Tile(30, 30, r"C:\Users\Aurora Borealis\Desktop\STU - AI\AI-Project\assets\sprites\meteor.png")
+tile = Tile(30, 30, "assets/sprites/meteor.png")
 
 class Maze:
 
