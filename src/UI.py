@@ -155,6 +155,7 @@ if __name__ == "__main__":
     stats_panel = StatsPanel()
     path = []
     total_path_cost = None
+    explored_nodes_count = None
     pending_path = []
     exploration_order = []
     exploration_progress = 0
@@ -185,10 +186,11 @@ if __name__ == "__main__":
     
     #Điều chính kích thước ma trận
     def resize_maze(new_size):
-        global matrix, start, goal, algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, animation_phase, monsters, plants
+        global matrix, start, goal, algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, animation_phase, monsters, plants
         algorithm_running = False
         path = []
         total_path_cost = None
+        explored_nodes_count = None
         pending_path = []
         exploration_order = []
         exploration_progress = 0
@@ -221,7 +223,7 @@ if __name__ == "__main__":
         move_bot_to_start()
     
     def start_algorithm(bot):
-        global algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
          
         if not algorithm_running:
            
@@ -231,24 +233,28 @@ if __name__ == "__main__":
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "IDA Star":
                 result = ida_star(matrix, start, goal, return_details=True)
                 path = result["path_found"] or []
                 total_path_cost = calculate_path_cost(matrix, path)
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "UCS":
                 result = UCS(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_ms"] / 1000
             elif algorithms == "Beam Search":
                 result = Beam_search(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_ms"] / 1000
 
             elif algorithms == "DFS":
@@ -256,6 +262,7 @@ if __name__ == "__main__":
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_us"] / 1000000
 
             elif algorithms == "BDS":
@@ -263,10 +270,12 @@ if __name__ == "__main__":
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time_us"] / 1000000
             else:
                 path = []
                 total_path_cost = None
+                explored_nodes_count = None
                 exploration_order = []
                 end_time = time.perf_counter()
                 time_taken = end_time - start_perf
@@ -299,9 +308,10 @@ if __name__ == "__main__":
             
     #Reset thuật toán
     def restart_algorithm(bot):
-        global algorithm_running, path, total_path_cost, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
         path = []
         total_path_cost = None
+        explored_nodes_count = None
         pending_path = []
         exploration_order = []
         exploration_progress = 0
@@ -332,7 +342,7 @@ if __name__ == "__main__":
     img_hover = pygame.transform.scale(img_hover, (120, 50))
     img_pressed = pygame.image.load("assets/sprites/start_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_start = Button(control_btn_x, control_btn_y_start, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
+    btn_start = Button(control_btn_x + 15, control_btn_y_start, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
     
     #Nút Back - Hàm quay về Menu
     def back_to_menu():
@@ -343,7 +353,7 @@ if __name__ == "__main__":
     img_back_normal = load_img_safe("assets/sprites/back_normal.png", (120, 50))
     img_back_hover = load_img_safe("assets/sprites/back_hover.png", (120, 50))
     img_back_pressed = load_img_safe("assets/sprites/back_pressed.png", (120, 50))
-    btn_back_game = Button(control_btn_x, control_btn_y_start + 50 + control_btn_gap, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
+    btn_back_game = Button(control_btn_x + 15, control_btn_y_start + (50 + control_btn_gap) * 2, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
 
     #Nút Restart
     img_normal = pygame.image.load("assets/sprites/retry_normal.png")
@@ -352,7 +362,7 @@ if __name__ == "__main__":
     img_hover = pygame.transform.scale(img_hover, (120, 50))
     img_pressed = pygame.image.load("assets/sprites/retry_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_restart = Button(control_btn_x, control_btn_y_start + (50 + control_btn_gap) * 2, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
+    btn_restart = Button(control_btn_x + 15, control_btn_y_start + 50 + control_btn_gap, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
     #sửa xong
 
     # Algorithms selection card và slider đặt ở góc trái dưới.
@@ -411,8 +421,9 @@ if __name__ == "__main__":
         elif game_state == "PLAYING":
             # Toàn bộ code vẽ game
             btn_start.draw(screen)
-            btn_back_game.draw(screen) # Vẽ nút back
+            #vẽ nút retry
             btn_restart.draw(screen)
+            btn_back_game.draw(screen) # Vẽ nút back
             
             volume_btn.draw(screen)
             earth.draw(screen)
@@ -504,7 +515,8 @@ if __name__ == "__main__":
                 result="Success" if algorithm_complete and len(path) > 0 else "Failure" if algorithm_complete and len(path) == 0 else "N/A",
                 path_length=len(path) if path is not None and algorithm_complete else "N/A",
                 execution_time=time_taken,
-                path_cost=total_path_cost if algorithm_complete else "N/A"
+                path_cost=total_path_cost if algorithm_complete else "N/A",
+                explored_nodes=explored_nodes_count if algorithm_complete else "N/A"
             )
         #sửa xong
 

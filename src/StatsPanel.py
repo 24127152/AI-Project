@@ -4,16 +4,18 @@ class StatsPanel:
         self.stats = {
             "Algorithm": "N/A",
             "Result": "N/A",
+            "Explored nodes": "N/A",
             "Path length": "N/A",
             "Path cost": "N/A",
             "Time": "N/A"
         }
         self.image = pygame.image.load("assets/sprites/stats_panel.png")
-        self.image = pygame.transform.scale(self.image, (350, 300))
+        self.image = pygame.transform.scale(self.image, (350, 350))
 
-    def update_stats(self, algorithm, result, path_length, execution_time, path_cost=None):
+    def update_stats(self, algorithm, result, path_length, execution_time, path_cost=None, explored_nodes=None):
         self.stats["Algorithm"] = algorithm
         self.stats["Result"] = result
+        self.stats["Explored nodes"] = explored_nodes if explored_nodes is not None else "N/A"
         self.stats["Path length"] = path_length
         self.stats["Path cost"] = path_cost if path_cost is not None else "N/A"
         self.stats["Time"] = f"{execution_time:4f} sec" if execution_time is not None else "N/A"

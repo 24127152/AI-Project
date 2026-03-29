@@ -90,7 +90,7 @@ def _get_legend_assets():
 def draw_legend_panel(screen, x, y):
     assets = _get_legend_assets()
     #Vị trí và kích thước panel chú thích
-    panel_rect = pygame.Rect(x - 490, y - 450, 220, 370)
+    panel_rect = pygame.Rect(x - 490, y - 420, 220, 350)
     shadow_rect = panel_rect.move(0, 3)
     pygame.draw.rect(screen, (0, 0, 0, 90), shadow_rect, border_radius=12)
     pygame.draw.rect(screen, (12, 26, 42, 220), panel_rect, border_radius=12)
@@ -111,11 +111,11 @@ def draw_legend_panel(screen, x, y):
     row_height = 50
     icon_x = panel_rect.x + 24
     text_x = panel_rect.x + 55
-    start_y = panel_rect.y + 22
+    start_y = panel_rect.y + 10
 
     for index, (label, icon) in enumerate(labels):
         row_y = start_y + index * row_height
-        icon_center_y = row_y + 15
+        icon_center_y = row_y + 12
 
         if isinstance(icon, Flag):
             frame = icon.frames[icon.current_frame]
