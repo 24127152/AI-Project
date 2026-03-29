@@ -5,7 +5,7 @@ from Background import Background
 from Bot import Bot
 from Monster import Monster
 from Plant import Plant
-from Algorithms import A_search, UCS, Beam_search, Bidirectional_bfs, DFS, ida_star
+from Algorithms import A_search, UCS, Beam_search, Bidirectional_bfs, DFS, ida_star, BFS, Jump_Point_Search
 from Button import Button
 from AlgoCard import AlgoCard
 from StatsPanel import StatsPanel
@@ -255,6 +255,20 @@ if __name__ == "__main__":
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
+                time_taken = result["processing_time_ms"] / 1000
+
+            elif algorithms == "JPS":
+                result = Jump_Point_Search(matrix, start, goal)
+                path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
+                exploration_order = result.get("exploration_order", [])
+                time_taken = result["processing_time_ms"] / 1000
+
+            elif algorithms == "BFS":
+                result = BFS(matrix, start, goal)
+                path = result["path_found"] or []
+                total_path_cost = result.get("total_path_cost")
+                exploration_order = result.get("exploration_order", [])
                 time_taken = result["processing_time_ms"] / 1000
 
             elif algorithms == "DFS":

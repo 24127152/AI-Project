@@ -77,7 +77,7 @@ class AlgoCard:
         #Tạo danh sách chứa các nút
         self.buttons = [left, right]
         self.current_index = 0
-        self.algorithms = ["IDA Star", "A Star", "UCS", "Beam Search", "DFS", "BDS"]
+        self.algorithms = ["IDA Star", "A Star", "JPS", "UCS", "Beam Search", "BFS", "DFS", "BDS"]
         self.selected_algorithm = self.algorithms[self.current_index]
 
     def handle_event(self, event):

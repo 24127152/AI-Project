@@ -151,6 +151,161 @@ def A_search(grid, start, goal):
         "processing_time_ms": round((end_time - start_time) * 1000, 4),
     }
 
+
+def is_walkable(grid, node):
+    rows, cols = len(grid), len(grid[0])
+    r, c = node
+    return 0 <= r < rows and 0 <= c < cols and grid[r][c] in WALKABLE_VALUES
+
+
+def get_jump_directions(grid, current, parent):
+    if parent is None:
+        directions = []
+        for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            if is_walkable(grid, (current[0] + dr, current[1] + dc)):
+                directions.append((dr, dc))
+        return directions
+
+    dr = current[0] - parent[0]
+    dc = current[1] - parent[1]
+    directions = []
+
+    if dr != 0:
+        if is_walkable(grid, (current[0] + dr, current[1])):
+            directions.append((dr, 0))
+        if is_walkable(grid, (current[0], current[1] + 1)) and not is_walkable(grid, (current[0] - dr, current[1] + 1)):
+            directions.append((0, 1))
+        if is_walkable(grid, (current[0], current[1] - 1)) and not is_walkable(grid, (current[0] - dr, current[1] - 1)):
+            directions.append((0, -1))
+    elif dc != 0:
+        if is_walkable(grid, (current[0], current[1] + dc)):
+            directions.append((0, dc))
+        if is_walkable(grid, (current[0] + 1, current[1])) and not is_walkable(grid, (current[0] + 1, current[1] - dc)):
+            directions.append((1, 0))
+        if is_walkable(grid, (current[0] - 1, current[1])) and not is_walkable(grid, (current[0] - 1, current[1] - dc)):
+            directions.append((-1, 0))
+
+    return directions
+
+
+def has_forced_neighbor(grid, node, direction):
+    dx, dy = direction
+    previous = (node[0] - dx, node[1] - dy)
+
+    if dx != 0:
+        if is_walkable(grid, (node[0], node[1] + 1)) and not is_walkable(grid, (previous[0], previous[1] + 1)):
+            return True
+        if is_walkable(grid, (node[0], node[1] - 1)) and not is_walkable(grid, (previous[0], previous[1] - 1)):
+            return True
+    elif dy != 0:
+        if is_walkable(grid, (node[0] + 1, node[1])) and not is_walkable(grid, (previous[0] + 1, previous[1])):
+            return True
+        if is_walkable(grid, (node[0] - 1, node[1])) and not is_walkable(grid, (previous[0] - 1, previous[1])):
+            return True
+
+    return False
+
+
+def jump(grid, current, direction, goal):
+    next_node = (current[0] + direction[0], current[1] + direction[1])
+    if not is_walkable(grid, next_node):
+        return None
+    if next_node == goal:
+        return next_node
+    if has_forced_neighbor(grid, next_node, direction):
+        return next_node
+    return jump(grid, next_node, direction, goal)
+
+
+def expand_straight_line(current, jump_point):
+    dr = 0 if jump_point[0] == current[0] else (1 if jump_point[0] > current[0] else -1)
+    dc = 0 if jump_point[1] == current[1] else (1 if jump_point[1] > current[1] else -1)
+    path = []
+    node = current
+    while node != jump_point:
+        node = (node[0] + dr, node[1] + dc)
+        path.append(node)
+    return path
+
+
+def Jump_Point_Search(grid, start, goal):
+    start_time = time.perf_counter()
+    if not grid or not grid[0]:
+        return {
+            "path_found": None,
+            "exploration_order": [],
+            "explored_nodes_count": 0,
+            "total_path_cost": math.inf,
+            "max_queue_size": 0,
+            "processing_time_ms": 0,
+        }
+
+    if start == goal:
+        end_time = time.perf_counter()
+        return {
+            "path_found": [start],
+            "exploration_order": [start],
+            "explored_nodes_count": 1,
+            "total_path_cost": 0,
+            "max_queue_size": 1,
+            "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        }
+
+    open_set = [(Heuristic(start, goal), 0, start, [start])]
+    g_score = {start: 0}
+    closed = set()
+    exploration_order = []
+    max_queue_size = 1
+
+    while open_set:
+        if len(open_set) > max_queue_size:
+            max_queue_size = len(open_set)
+
+        f_cost, current_g, current, path = heapq.heappop(open_set)
+        if current in closed:
+            continue
+
+        closed.add(current)
+        exploration_order.append(current)
+
+        if current == goal:
+            total_cost = calculate_path_cost(grid, path)
+            end_time = time.perf_counter()
+            return {
+                "path_found": path,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(closed),
+                "total_path_cost": total_cost,
+                "max_queue_size": max_queue_size,
+                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+            }
+
+        parent = path[-2] if len(path) >= 2 else None
+        for direction in get_jump_directions(grid, current, parent):
+            jump_point = jump(grid, current, direction, goal)
+            if jump_point is None or jump_point in closed:
+                continue
+
+            step_length = abs(jump_point[0] - current[0]) + abs(jump_point[1] - current[1])
+            tentative_g = current_g + step_length
+            if tentative_g >= g_score.get(jump_point, math.inf):
+                continue
+
+            g_score[jump_point] = tentative_g
+            expanded_path = path + expand_straight_line(current, jump_point)
+            heapq.heappush(open_set, (tentative_g + Heuristic(jump_point, goal), tentative_g, jump_point, expanded_path))
+
+    end_time = time.perf_counter()
+    return {
+        "path_found": None,
+        "exploration_order": exploration_order,
+        "explored_nodes_count": len(closed),
+        "total_path_cost": math.inf,
+        "max_queue_size": max_queue_size,
+        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+    }
+
+
 def Beam_search(grid, start, goal, beam_width=2):
     start_time = time.perf_counter()
 
@@ -415,6 +570,83 @@ def Bidirectional_bfs(grid, start, end):
         "total_path_cost": math.inf,
         "max_queue_size": queue_max_size,
         "processing_time_us": (end_time - start_time) * 1000000
+    }
+
+
+def BFS(grid, start, goal):
+    start_time = time.perf_counter()
+    if not grid or not grid[0]:
+        return {
+            "path_found": None,
+            "exploration_order": [],
+            "explored_nodes_count": 0,
+            "total_path_cost": math.inf,
+            "max_queue_size": 0,
+            "processing_time_ms": 0,
+        }
+
+    rows, cols = len(grid), len(grid[0])
+    if start == goal:
+        end_time = time.perf_counter()
+        return {
+            "path_found": [start],
+            "exploration_order": [start],
+            "explored_nodes_count": 1,
+            "total_path_cost": 0,
+            "max_queue_size": 1,
+            "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        }
+
+    directions = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+    queue = deque([start])
+    visited = {start}
+    parent = {}
+    exploration_order = []
+    max_queue_size = 1
+
+    while queue:
+        if len(queue) > max_queue_size:
+            max_queue_size = len(queue)
+
+        current = queue.popleft()
+        exploration_order.append(current)
+
+        if current == goal:
+            path = []
+            node = current
+            while node != start:
+                path.append(node)
+                node = parent[node]
+            path.append(start)
+            path.reverse()
+            total_cost = calculate_path_cost(grid, path)
+            end_time = time.perf_counter()
+            return {
+                "path_found": path,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(visited),
+                "total_path_cost": total_cost,
+                "max_queue_size": max_queue_size,
+                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+            }
+
+        for dr, dc in directions:
+            neighbor = (current[0] + dr, current[1] + dc)
+            if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
+                neighbor_value = grid[neighbor[0]][neighbor[1]]
+                if neighbor_value in WALKABLE_VALUES and neighbor not in visited:
+                    visited.add(neighbor)
+                    parent[neighbor] = current
+                    queue.append(neighbor)
+
+    end_time = time.perf_counter()
+    return {
+        "path_found": None,
+        "exploration_order": exploration_order,
+        "explored_nodes_count": len(visited),
+        "total_path_cost": math.inf,
+        "max_queue_size": max_queue_size,
+        "processing_time_ms": round((end_time - start_time) * 1000, 4),
     }
 
 
