@@ -356,7 +356,7 @@ if __name__ == "__main__":
     img_hover = pygame.transform.scale(img_hover, (120, 50))
     img_pressed = pygame.image.load("assets/sprites/start_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_start = Button(control_btn_x + 15, control_btn_y_start, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
+    btn_start = Button(control_btn_x + 20, control_btn_y_start, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: start_algorithm(bot))
     
     #Nút Back - Hàm quay về Menu
     def back_to_menu():
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     img_back_normal = load_img_safe("assets/sprites/back_normal.png", (120, 50))
     img_back_hover = load_img_safe("assets/sprites/back_hover.png", (120, 50))
     img_back_pressed = load_img_safe("assets/sprites/back_pressed.png", (120, 50))
-    btn_back_game = Button(control_btn_x + 15, control_btn_y_start + (50 + control_btn_gap) * 2, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
+    btn_back_game = Button(control_btn_x + 20, control_btn_y_start + (50 + control_btn_gap) * 2, 120, 50, img_back_normal, img_back_hover, img_back_pressed, onclick=back_to_menu)
 
     #Nút Restart
     img_normal = pygame.image.load("assets/sprites/retry_normal.png")
@@ -376,11 +376,11 @@ if __name__ == "__main__":
     img_hover = pygame.transform.scale(img_hover, (120, 50))
     img_pressed = pygame.image.load("assets/sprites/retry_pressed.png")
     img_pressed = pygame.transform.scale(img_pressed, (120, 50))
-    btn_restart = Button(control_btn_x + 15, control_btn_y_start + 50 + control_btn_gap, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
+    btn_restart = Button(control_btn_x + 20, control_btn_y_start + 50 + control_btn_gap, 120, 50, img_normal, img_hover, img_pressed, onclick=lambda: restart_algorithm(bot))
     #sửa xong
 
     # Algorithms selection card và slider đặt ở góc trái dưới.
-    selection_card = AlgoCard(panel_x=20, panel_y=HEIGHT - 170)
+    selection_card = AlgoCard(panel_x=20, panel_y=HEIGHT - 150)
     algorithms = selection_card.selected_algorithm
     algorithm_complete = False
     time_taken = None

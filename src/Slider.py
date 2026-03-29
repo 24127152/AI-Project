@@ -48,7 +48,7 @@ class Slider:
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             self.update_value(event.pos[0])
     
-    #Hàm cập nhật giá trị dựa trên vị trí chuột trene thanht trượt
+    #Hàm cập nhật giá trị dựa trên vị trí chuột trene thanh trượt
     def update_value(self, mouse_x):
         relative_x = mouse_x - self.rect.x
         relative_x = max(0, min(relative_x, self.rect.width))
