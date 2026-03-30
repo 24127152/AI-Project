@@ -16,11 +16,20 @@ def get_cell_cost(cell_value):
         return PLANT_COST_VALUE
     return 1
 
+def calculate_path_cost(grid, path):
+    if not path:
+        return math.inf
+
+    total_cost = 0
+    for row, col in path[1:]:
+        total_cost += get_cell_cost(grid[row][col])
+    return total_cost
 
 def Heuristic(node, goal):
     # Sử dụng Manhattan distance làm heuristic
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
+#Uniform Cost Search (UCS)
 def UCS(grid, start, goal):
     start_time = time.perf_counter()
 
@@ -30,7 +39,7 @@ def UCS(grid, start, goal):
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
-            "processing_time_ms": 0,
+            "processing_time": 0,
         }
 
     rows, cols = len(grid), len(grid[0])
@@ -62,7 +71,7 @@ def UCS(grid, start, goal):
                 "explored_nodes_count": len(explored_nodes),
                 "total_path_cost": current_cost,
                 "max_queue_size": max_queue_size,
-                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                "processing_time": end_time - start_time,
             }
         
         for dr, dc in directions:
@@ -83,10 +92,10 @@ def UCS(grid, start, goal):
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        "processing_time": end_time - start_time,
     }
 
-
+#A* Search
 def A_search(grid, start, goal):
     start_time = time.perf_counter()
 
@@ -96,7 +105,7 @@ def A_search(grid, start, goal):
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
-            "processing_time_ms": 0,
+            "processing_time": 0,
         }
 
     rows, cols = len(grid), len(grid[0])
@@ -128,7 +137,7 @@ def A_search(grid, start, goal):
                 "explored_nodes_count": len(explored_nodes),
                 "total_path_cost": current_g_cost,
                 "max_queue_size": max_queue_size,
-                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                "processing_time": end_time - start_time,
             }
         
         for dr, dc in directions:
@@ -148,10 +157,10 @@ def A_search(grid, start, goal):
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        "processing_time": end_time - start_time,
     }
 
-
+#Jump Point Search (JPS)
 def is_walkable(grid, node):
     rows, cols = len(grid), len(grid[0])
     r, c = node
@@ -237,7 +246,7 @@ def Jump_Point_Search(grid, start, goal):
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
-            "processing_time_ms": 0,
+            "processing_time": 0,
         }
 
     if start == goal:
@@ -248,7 +257,7 @@ def Jump_Point_Search(grid, start, goal):
             "explored_nodes_count": 1,
             "total_path_cost": 0,
             "max_queue_size": 1,
-            "processing_time_ms": round((end_time - start_time) * 1000, 4),
+            "processing_time": end_time - start_time,
         }
 
     open_set = [(Heuristic(start, goal), 0, start, [start])]
@@ -277,7 +286,7 @@ def Jump_Point_Search(grid, start, goal):
                 "explored_nodes_count": len(closed),
                 "total_path_cost": total_cost,
                 "max_queue_size": max_queue_size,
-                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                "processing_time": end_time - start_time,
             }
 
         parent = path[-2] if len(path) >= 2 else None
@@ -302,10 +311,10 @@ def Jump_Point_Search(grid, start, goal):
         "explored_nodes_count": len(closed),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        "processing_time": end_time - start_time,
     }
 
-
+#Beam Search
 def Beam_search(grid, start, goal, beam_width=2):
     start_time = time.perf_counter()
 
@@ -315,7 +324,7 @@ def Beam_search(grid, start, goal, beam_width=2):
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
-            "processing_time_ms": 0,
+            "processing_time": 0,
         }
 
     rows, cols = len(grid), len(grid[0])
@@ -348,7 +357,7 @@ def Beam_search(grid, start, goal, beam_width=2):
                     "explored_nodes_count": len(explored_nodes),
                     "total_path_cost": current_g_cost,
                     "max_queue_size": max_queue_size,
-                    "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                    "processing_time": end_time - start_time,
                 }
 
             # Sinh các node kề
@@ -390,29 +399,18 @@ def Beam_search(grid, start, goal, beam_width=2):
         "explored_nodes_count": len(explored_nodes),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        "processing_time": end_time - start_time,
     }
 
 
 #IDA 
-def get_cell_cost(cell_value):
-    if cell_value == MONSTER_COST_VALUE:
-        return MONSTER_COST_VALUE
-    if cell_value == PLANT_COST_VALUE:
-        return PLANT_COST_VALUE
-    return 1
-
-
-def heuristic(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
 def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explored_nodes):
     current = path[-1]
     if current not in explored_nodes:
         explored_nodes.add(current)
         exploration_order.append(current)
 
-    f = g + heuristic(current, goal)
+    f = g + Heuristic(current, goal)
     if f > threshold:
         return f
     if current == goal:
@@ -435,7 +433,7 @@ def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explo
 
 def ida_star(matrix, start, goal, return_details=False):
     start_time = time.perf_counter()
-    threshold = heuristic(start, goal)
+    threshold = Heuristic(start, goal)
     path = [start]
     exploration_order = []
     explored_nodes = set()
@@ -449,7 +447,7 @@ def ida_star(matrix, start, goal, return_details=False):
                     "path_found": path,
                     "exploration_order": exploration_order,
                     "explored_nodes_count": len(explored_nodes),
-                    "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                    "processing_time": end_time - start_time,
                 }
             return path
         if temp == float('inf'):
@@ -459,7 +457,7 @@ def ida_star(matrix, start, goal, return_details=False):
                     "path_found": None,
                     "exploration_order": exploration_order,
                     "explored_nodes_count": len(explored_nodes),
-                    "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                    "processing_time": end_time - start_time,
                 }
             return None
         threshold = temp
@@ -486,8 +484,7 @@ def build_result(meet, parent_start, parent_end, start, end):
 
     return path
 
-
-#BDS
+#Bidirectional Search
 def Bidirectional_bfs(grid, start, end):
     start_time = time.perf_counter()
     directions = [(0,-1), (-1,0), (0,1), (1,0)]
@@ -502,7 +499,7 @@ def Bidirectional_bfs(grid, start, end):
             "explored_nodes_count": 1,
             "total_path_cost": 0,
             "max_queue_size": 1,
-            "processing_time_us": (end_time - start_time) * 1000000
+            "processing_time": end_time - start_time
         }
 
     queue_start = deque([start])
@@ -537,7 +534,7 @@ def Bidirectional_bfs(grid, start, end):
                                 "explored_nodes_count": len(visited_end) + len(visited_start),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
-                                "processing_time_us": (end_time - start_time) * 1000000
+                                "processing_time": end_time - start_time
                             }
         for _ in range(len(queue_end)):
             x, y = queue_end.popleft()
@@ -560,7 +557,7 @@ def Bidirectional_bfs(grid, start, end):
                                 "explored_nodes_count": len(visited_start) + len(visited_end),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
-                                "processing_time_us": (end_time - start_time) * 1000000
+                                "processing_time": end_time - start_time
                             }
     end_time = time.perf_counter()
     return {
@@ -569,10 +566,10 @@ def Bidirectional_bfs(grid, start, end):
         "explored_nodes_count": len(visited_end) + len(visited_start),
         "total_path_cost": math.inf,
         "max_queue_size": queue_max_size,
-        "processing_time_us": (end_time - start_time) * 1000000
+        "processing_time": end_time - start_time
     }
 
-
+#Breadth-First Search (BFS)
 def BFS(grid, start, goal):
     start_time = time.perf_counter()
     if not grid or not grid[0]:
@@ -582,7 +579,7 @@ def BFS(grid, start, goal):
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
-            "processing_time_ms": 0,
+            "processing_time": 0,
         }
 
     rows, cols = len(grid), len(grid[0])
@@ -594,7 +591,7 @@ def BFS(grid, start, goal):
             "explored_nodes_count": 1,
             "total_path_cost": 0,
             "max_queue_size": 1,
-            "processing_time_ms": round((end_time - start_time) * 1000, 4),
+            "processing_time": end_time - start_time,
         }
 
     directions = [(0, -1), (-1, 0), (0, 1), (1, 0)]
@@ -627,7 +624,7 @@ def BFS(grid, start, goal):
                 "explored_nodes_count": len(visited),
                 "total_path_cost": total_cost,
                 "max_queue_size": max_queue_size,
-                "processing_time_ms": round((end_time - start_time) * 1000, 4),
+                "processing_time": end_time - start_time,
             }
 
         for dr, dc in directions:
@@ -646,28 +643,10 @@ def BFS(grid, start, goal):
         "explored_nodes_count": len(visited),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
+        "processing_time": end_time - start_time,
     }
 
-
-def get_cell_cost(cell_value):
-    if cell_value == MONSTER_COST_VALUE:
-        return MONSTER_COST_VALUE
-    if cell_value == PLANT_COST_VALUE:
-        return PLANT_COST_VALUE
-    return 1
-
-
-def calculate_path_cost(grid, path):
-    if not path:
-        return math.inf
-
-    total_cost = 0
-    for row, col in path[1:]:
-        total_cost += get_cell_cost(grid[row][col])
-    return total_cost
-
-#DFS
+#Depth-First Search (DFS)
 def DFS(grid, start, end):
     start_time = time.perf_counter()
     directions = [(0,-1), (-1,0), (0,1), (1,0)]
@@ -700,7 +679,7 @@ def DFS(grid, start, end):
                 "explored_nodes_count": len(visited),
                 "total_path_cost": weighted_cost,
                 "max_queue_size": stack_max_size,
-                "processing_time_us": (end_time - start_time) * 1000000
+                "processing_time": end_time - start_time
             }
 
         for dx, dy in directions:
@@ -718,52 +697,5 @@ def DFS(grid, start, end):
         "explored_nodes_count": len(visited),
         "total_path_cost": math.inf,
         "max_queue_size": stack_max_size,
-        "processing_time_us":(end_time - start_time) * 1000000
+        "processing_time":end_time - start_time
     }
-
-"""
-def Form(grid, start, goal):
-    start_time = time.perf_counter()
-
-    rows, cols = len(grid), len(grid[0])
-
-    explored_nodes = set()
-    max_queue_size = 0 #memory usage
-
-
-    end_time = time.perf_counter()
-    return {
-        "path_found": None,
-        "explored_nodes_count": len(explored_nodes),
-        "total_path_cost": math.inf,
-        "max_queue_size": max_queue_size,
-        "processing_time_ms": round((end_time - start_time) * 1000, 4),
-    }
-
-if __name__ == "__main__":
-    INF = math.inf # Wall
-    grid = [
-        [1,   1,   1,   1,   INF, 1,   1,   1,   1,   1  ],
-        [1,   5,   5,   1,   INF, 1,   5,   5,   5,   1  ],
-        [1,   INF, 1,   1,   INF, 1,   1,   1,   INF, 1  ],
-        [1,   INF, 1,   5,   5,   5,   INF, 1,   INF, 1  ],
-        [1,   1,   1,   INF, INF, 1,   INF, 1,   INF, 1  ],
-        [INF, INF, 1,   1,   1,   1,   INF, 1,   1,   1  ],
-        [1,   1,   5,   5,   5,   1,   INF, INF, INF, 1  ],
-        [1,   INF, INF, INF, 1,   1,   1,   1,   1,   1  ],
-        [1,   1,   1,   INF, 5,   5,   5,   INF, 5,   1  ],
-        [INF, INF, 1,   1,   1,   1,   1,   1,   1,   1  ]
-    ]
-    
-    start_node = (0, 0)
-    goal_node = (9, 9)
-
-    result = A_search(grid, start_node, goal_node)
-    
-    print("--- DETAILED OUTPUT ---")
-    print(f"- Path found: {result['path_found']}")
-    print(f"- Number of explored nodes: {result['explored_nodes_count']}")
-    print(f"- Total path cost: {result['total_path_cost']}")
-    print(f"- Max Queue Size: {result['max_queue_size']}")
-    print(f"- Processing time: {result['processing_time_ms']} ms")
-"""

@@ -234,42 +234,42 @@ if __name__ == "__main__":
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
             elif algorithms == "IDA Star":
                 result = ida_star(matrix, start, goal, return_details=True)
                 path = result["path_found"] or []
                 total_path_cost = calculate_path_cost(matrix, path)
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
             elif algorithms == "UCS":
                 result = UCS(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
             elif algorithms == "Beam Search":
                 result = Beam_search(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
 
             elif algorithms == "JPS":
                 result = Jump_Point_Search(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
 
             elif algorithms == "BFS":
                 result = BFS(matrix, start, goal)
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
-                time_taken = result["processing_time_ms"] / 1000
+                time_taken = result["processing_time"]
 
             elif algorithms == "DFS":
                 result = DFS(matrix, start, goal)
@@ -277,7 +277,7 @@ if __name__ == "__main__":
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_us"] / 1000000
+                time_taken = result["processing_time"]
 
             elif algorithms == "BDS":
                 result = Bidirectional_bfs(matrix, start, goal)
@@ -285,7 +285,7 @@ if __name__ == "__main__":
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
                 explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
-                time_taken = result["processing_time_us"] / 1000000
+                time_taken = result["processing_time"]
             else:
                 path = []
                 total_path_cost = None
