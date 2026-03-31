@@ -18,7 +18,7 @@ def get_cell_cost(cell_value):
 
 def calculate_path_cost(grid, path):
     if not path:
-        return math.inf
+        return None
 
     total_cost = 0
     for row, col in path[1:]:

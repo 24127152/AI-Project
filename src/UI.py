@@ -5,7 +5,7 @@ from Background import Background
 from Bot import Bot
 from Monster import Monster
 from Plant import Plant
-from Algorithms import A_search, UCS, Beam_search, Bidirectional_bfs, DFS, ida_star, BFS, Jump_Point_Search
+from Algorithms import A_search, UCS, Beam_search, Bidirectional_bfs, DFS, ida_star, BFS, Jump_Point_Search, get_cell_cost, calculate_path_cost, MONSTER_COST_VALUE, PLANT_COST_VALUE
 from Button import Button
 from AlgoCard import AlgoCard
 from StatsPanel import StatsPanel
@@ -20,27 +20,7 @@ import time
 from Menu import MainMenu, load_img_safe
 #sửa xong
 
-MONSTER_COST_VALUE = 5
-PLANT_COST_VALUE = 6
 MAZE_SHIFT_X = 180
-
-
-def get_cell_cost(cell_value):
-    if cell_value == MONSTER_COST_VALUE:
-        return MONSTER_COST_VALUE
-    if cell_value == PLANT_COST_VALUE:
-        return PLANT_COST_VALUE
-    return 1
-
-
-def calculate_path_cost(matrix, path):
-    if not path:
-        return None
-
-    total_cost = 0
-    for row, col in path[1:]:
-        total_cost += get_cell_cost(matrix[row][col])
-    return total_cost
 
 #Hàm vẽ dường đi
 def draw_path_progression(screen, matrix, path, progress_index, width, height, tile_size, maze_shift_x=0):
