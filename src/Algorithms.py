@@ -297,8 +297,8 @@ def Jump_Point_Search(grid, start, goal):
             if jump_point is None or jump_point in closed:
                 continue
 
-            step_length = abs(jump_point[0] - current[0]) + abs(jump_point[1] - current[1])
-            tentative_g = current_g + step_length
+            segment = expand_straight_line(current, jump_point)
+            tentative_g = current_g + sum(get_cell_cost(grid[r][c]) for r, c in segment)
             if tentative_g >= g_score.get(jump_point, math.inf):
                 continue
 
@@ -434,7 +434,7 @@ def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explo
                 path.pop()
     return min_threshold
 
-def ida_star(matrix, start, goal, return_details=False):
+def ida_star(matrix, start, goal):
     start_time = time.perf_counter()
     threshold = Heuristic(start, goal)
     path = [start]
@@ -445,28 +445,24 @@ def ida_star(matrix, start, goal, return_details=False):
         temp = dfs_search(matrix, start, goal, 0, threshold, path, exploration_order, explored_nodes)
         if temp == True:
             end_time = time.perf_counter()
-            if return_details:
-                return {
-                    "path_found": path,
-                    "exploration_order": exploration_order,
-                    "explored_nodes_count": len(explored_nodes),
-                    "total_path_cost": calculate_path_cost(matrix, path),
-                    "max_queue_size": 0,
-                    "processing_time": end_time - start_time,
-                }
-            return path
+            return {
+                "path_found": path,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(explored_nodes),
+                "total_path_cost": calculate_path_cost(matrix, path),
+                "max_queue_size": 0,
+                "processing_time": end_time - start_time,
+            }
         if temp == float('inf'):
             end_time = time.perf_counter()
-            if return_details:
-                return {
-                    "path_found": None,
-                    "exploration_order": exploration_order,
-                    "explored_nodes_count": len(explored_nodes),
-                    "total_path_cost": math.inf,
-                    "max_queue_size": 0,
-                    "processing_time": end_time - start_time,
-                }
-            return None
+            return {
+                "path_found": None,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(explored_nodes),
+                "total_path_cost": math.inf,
+                "max_queue_size": 0,
+                "processing_time": end_time - start_time,
+            }
         threshold = temp
 
 #Build result
