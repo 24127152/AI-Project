@@ -538,7 +538,7 @@ def Bidirectional_bfs(grid, start, end):
                             return {
                                 "path_found": path,
                                 "exploration_order": exploration_order,
-                                "explored_nodes_count": len(visited_end) + len(visited_start),
+                                "explored_nodes_count": len(exploration_order),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
                                 "processing_time": end_time - start_time
@@ -561,7 +561,7 @@ def Bidirectional_bfs(grid, start, end):
                             return {
                                 "path_found": path,
                                 "exploration_order": exploration_order,
-                                "explored_nodes_count": len(visited_start) + len(visited_end),
+                                "explored_nodes_count": len(exploration_order),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
                                 "processing_time": end_time - start_time
@@ -570,7 +570,7 @@ def Bidirectional_bfs(grid, start, end):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited_end) + len(visited_start),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": queue_max_size,
         "processing_time": end_time - start_time
@@ -628,7 +628,7 @@ def BFS(grid, start, goal):
             return {
                 "path_found": path,
                 "exploration_order": exploration_order,
-                "explored_nodes_count": len(visited),
+                "explored_nodes_count": len(exploration_order),
                 "total_path_cost": total_cost,
                 "max_queue_size": max_queue_size,
                 "processing_time": end_time - start_time,
@@ -647,7 +647,7 @@ def BFS(grid, start, goal):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
         "processing_time": end_time - start_time,
@@ -683,7 +683,7 @@ def DFS(grid, start, end):
             return {
                 "path_found": path,
                 "exploration_order": exploration_order,
-                "explored_nodes_count": len(visited),
+                "explored_nodes_count": len(exploration_order),
                 "total_path_cost": weighted_cost,
                 "max_queue_size": stack_max_size,
                 "processing_time": end_time - start_time
@@ -701,7 +701,7 @@ def DFS(grid, start, end):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": stack_max_size,
         "processing_time":end_time - start_time
