@@ -14,13 +14,17 @@ class Star:
         sheet = pygame.image.load("assets/sprites/Star.png").convert_alpha()
         frames_count = 13
 
-        frame_size = sheet.get_size()
-        self.frames_width = frame_size[0] // frames_count
-        self.frames_height = frame_size[1]
+        # SỬA LỖI Ở ĐÂY: Ép kích thước tấm ảnh gốc (sheet) theo đúng tỷ lệ width/height được truyền vào
+        # Vì ảnh có 13 frame ngang, nên chiều ngang của sheet phải là width * 13
+        sheet = pygame.transform.smoothscale(sheet, (int(width * frames_count), int(height)))
+
+        self.frames_width = width
+        self.frames_height = height
         self.frames = []
         for index in range(frames_count):
-            frame_rect = pygame.Rect(index * frame_size[0] // frames_count, 0, frame_size[0] // frames_count, frame_size[1])
-            frame = pygame.Surface((frame_size[0] // frames_count, frame_size[1]), pygame.SRCALPHA)
+            # Cắt từng frame theo đúng chuẩn width và height
+            frame_rect = pygame.Rect(index * width, 0, width, height)
+            frame = pygame.Surface((width, height), pygame.SRCALPHA)
             frame.blit(sheet, (0, 0), frame_rect)
             self.frames.append(frame)
 
@@ -29,7 +33,7 @@ class Star:
         self.last_tick = pygame.time.get_ticks()
     
     def update_size(self, width, height):
-        #Cập nhật kích thước star
+        #Cập nhật kích thước star khi người chơi kéo thanh Slider
         self.base_width = width
         self.base_height = height
         self._load_frames(width, height)
@@ -39,7 +43,6 @@ class Star:
         if now - self.last_tick >= self.frame_duration_ms:
             self.current_frame = (self.current_frame + 1) % len(self.frames)
             self.last_tick = now
-
 
     def draw(self, screen, x, y):
         self.update()
@@ -53,8 +56,8 @@ def _get_legend_assets():
     if LEGEND_ASSETS is not None:
         return LEGEND_ASSETS
 
-
     icon_size = (30, 30)
+    # Trong bảng chú thích (Legend), ta giữ cứng size 30x30 cho đẹp
     start_node_sprite = Star(30, 30)
     Slime = Monster(0, 0, 30, 30)
     plant = Plant(0, 300, 30, 30)
@@ -69,10 +72,8 @@ def _get_legend_assets():
     final_surface = pygame.Surface(icon_size, pygame.SRCALPHA)
     final_surface.fill((0, 0, 0, 0))
     pygame.draw.rect(final_surface, (255, 215, 0), pygame.Rect(2, 2, 20, 20), border_radius=4)
-
     
     font = pygame.font.Font("assets/fonts/Cyber.otf", 15)
-    
     
     LEGEND_ASSETS = {
         "start_icon": start_node_sprite,
@@ -107,7 +108,6 @@ def draw_legend_panel(screen, x, y):
         ("Plant", assets["plant_icon"])
     )
 
-
     row_height = 50
     icon_x = panel_rect.x + 24
     text_x = panel_rect.x + 55
@@ -137,5 +137,3 @@ def draw_legend_panel(screen, x, y):
         shadow_rect = text_rect.move(1, 1)
         screen.blit(text_shadow, shadow_rect)
         screen.blit(text_surface, text_rect)
-
-       

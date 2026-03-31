@@ -1,10 +1,11 @@
 import pygame
-tile_size = 30
 
 class Bot:
     def __init__(self, image_path, path, node_width, node_height):
-        self.draw_width = 25
-        self.draw_height = 30
+        # 1. Tối ưu tỷ lệ: Bot chiếm 75% chiều rộng và 85% chiều cao của ô
+        # Giảm mức giới hạn (floor) xuống 6px để bot có thể co lại cực nhỏ cho map khổng lồ
+        self.draw_width = max(6, int(node_width * 0.75))
+        self.draw_height = max(8, int(node_height * 0.85))
         
         self.bot_x = 0
         self.bot_y = 0
@@ -14,8 +15,9 @@ class Bot:
 
         self.path = path if path is not None else []
         self.path_index = 0
-        #Speed để bot di từ từ
-        self.speed = 5
+        
+        # 2. Tốc độ động: Tốc độ bằng 1/3 kích thước ô, thấp nhất là 2px/frame
+        self.speed = max(2, node_width // 3)
 
         self.animate = pygame.image.load("assets/sprites/bot_animate.png").convert_alpha()
         self.is_moving = False
@@ -66,10 +68,13 @@ class Bot:
                 screen.blit(self.idle_frames[self.idle_frame_index], (self.bot_x, self.bot_y))
 
     def set_position(self, x, y):
-        self.bot_x = x
-        self.bot_y = y
+        # 3. Căn giữa khi vừa được đặt vào game
+        center_offset_x = (self.node_width - self.draw_width) // 2
+        center_offset_y = (self.node_height - self.draw_height) // 2
+        self.bot_x = x + center_offset_x
+        self.bot_y = y + center_offset_y
     
-    def update(self,x , y, matrix, maze_shift_x=0):
+    def update(self, x, y, matrix, maze_shift_x=0):
         W = len(matrix[0]) * self.node_width
         H = len(matrix) * self.node_height
         offset_x = (x - W) // 2 + maze_shift_x
@@ -78,23 +83,29 @@ class Bot:
         
         if self.path and self.path_index < len(self.path):
             row, col = self.path[self.path_index]
-            x = offset_x + col * self.node_width
-            y = offset_y + row * self.node_height
-            if self.bot_x < x:
+            
+            # 3. Căn giữa tọa độ đích cho mỗi bước đi
+            target_x = offset_x + col * self.node_width + (self.node_width - self.draw_width) // 2
+            target_y = offset_y + row * self.node_height + (self.node_height - self.draw_height) // 2
+            
+            if self.bot_x < target_x:
                 self.bot_x += self.speed
                 moved = True
-            elif self.bot_x > x:
+            elif self.bot_x > target_x:
                 self.bot_x -= self.speed
                 moved = True
-            if self.bot_y < y:
+                
+            if self.bot_y < target_y:
                 self.bot_y += self.speed
                 moved = True
-            elif self.bot_y > y:
+            elif self.bot_y > target_y:
                 self.bot_y -= self.speed
                 moved = True
-            if abs(self.bot_x - x) < self.speed and abs(self.bot_y - y) < self.speed:
-                self.bot_x = x
-                self.bot_y = y   
+                
+            # Kiểm tra xem đã đến đúng đích (cho phép sai số bằng tốc độ)
+            if abs(self.bot_x - target_x) <= self.speed and abs(self.bot_y - target_y) <= self.speed:
+                self.bot_x = target_x
+                self.bot_y = target_y   
                 self.path_index += 1
         
         self.is_moving = moved
@@ -103,7 +114,6 @@ class Bot:
         elif not self.path or self.path_index >= len(self.path):
             self.current_frame = 0
             self.idle_animation()
-        
 
     def animation(self):
         now = pygame.time.get_ticks()

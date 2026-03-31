@@ -2,16 +2,19 @@ import pygame
 from Tile import Tile
 from Bot import Bot
 import random
-tile_size = 30
-tile = Tile(30, 30, "assets/sprites/meteor.png")
+
+# Đã thu nhỏ kích thước tile từ 30 xuống 15 để chứa được mê cung lớn
+tile_size = 15
+tile = Tile(15, 15, "assets/sprites/meteor.png")
 
 class Maze:
 
     def __init__(self, width, height, image_path):
         self.width = width
         self.height = height
-        self.node_width = 30
-        self.node_height = 30
+        # Đồng bộ kích thước node với tile_size
+        self.node_width = 15
+        self.node_height = 15
 
     def load_matrix(self, file_path):
         #Đọc file Matrix.txt và vẽ ma trận bằng tile
@@ -23,16 +26,15 @@ class Maze:
         return matrix
     
     def generate_maze(self, size):
-        """Tạo maze ngẫu nhiên với kích thước size x size, đảm bảo có đường từ start tới goal"""
+        """Tạo Braid Maze (Mê cung bện) siêu khó, đan xen nhiều đường, random start/goal xa nhau"""
         size = max(5, int(size))
         if size % 2 == 0:
             size -= 1
 
         matrix = [[1 for _ in range(size)] for _ in range(size)]
-        
-        # Tạo đường đi ngẫu nhiên bằng carving path
         visited = [[False for _ in range(size)] for _ in range(size)]
         
+        # 1. Thuật toán Carving path tạo cấu trúc mê cung cơ bản với nhiều ngõ cụt
         def carve_path(x, y):
             visited[y][x] = True
             matrix[y][x] = 0
@@ -47,20 +49,73 @@ class Maze:
                     carve_path(nx, ny)
         
         carve_path(1, 1)
+
+        # 2. THUẬT TOÁN BRAID: Khử ngõ cụt để tạo vô số đường vòng phức tạp
+        dead_ends = []
+        for y in range(1, size - 1):
+            for x in range(1, size - 1):
+                if matrix[y][x] == 0:
+                    walls = 0
+                    if matrix[y-1][x] == 1: walls += 1
+                    if matrix[y+1][x] == 1: walls += 1
+                    if matrix[y][x-1] == 1: walls += 1
+                    if matrix[y][x+1] == 1: walls += 1
+                    
+                    if walls == 3: # Đây là 1 ngõ cụt
+                        dead_ends.append((x, y))
+
+        # Phá khoảng 75% ngõ cụt để nối với các đường khác
+        # Cố tình giữ lại 25% ngõ cụt để làm "bẫy" đánh lừa các thuật toán
+        braid_ratio = 0.75 
+        random.shuffle(dead_ends)
+        braid_count = int(len(dead_ends) * braid_ratio)
+
+        for i in range(braid_count):
+            x, y = dead_ends[i]
+            # Chọn tường xung quanh ngõ cụt để đập (tránh viền ngoài cùng)
+            possible_walls = []
+            if matrix[y-1][x] == 1 and y-1 > 0: possible_walls.append((x, y-1))
+            if matrix[y+1][x] == 1 and y+1 < size-1: possible_walls.append((x, y+1))
+            if matrix[y][x-1] == 1 and x-1 > 0: possible_walls.append((x-1, y))
+            if matrix[y][x+1] == 1 and x+1 < size-1: possible_walls.append((x+1, y))
+
+            if possible_walls:
+                wx, wy = random.choice(possible_walls)
+                matrix[wy][wx] = 0 # Nối ngõ cụt sang đường bên cạnh
+
+        # 3. Random vị trí Cửa Vào (2) và Cửa Ra (3) với khoảng cách xa nhau
+        valid_starts = []
+        valid_goals = []
         
-        # Đảm bảo có đường từ cửa vào tới cửa ra (hành lang chữ L)
-        for j in range(1, size - 1):
-            matrix[1][j] = 0
         for i in range(1, size - 1):
-            matrix[i][size - 2] = 0
+            if matrix[1][i] == 0: valid_starts.append((0, i))
+            if matrix[size-2][i] == 0: valid_goals.append((size-1, i))
+            if matrix[i][1] == 0: valid_starts.append((i, 0))
+            if matrix[i][size-2] == 0: valid_goals.append((i, size-1))
 
-        # Cửa vào bên trái và cửa ra bên phải
-        matrix[1][0] = 2
-        matrix[size - 2][size - 1] = 3
+        if not valid_starts: valid_starts = [(0, 1)]
+        if not valid_goals: valid_goals = [(size-1, size-2)]
 
-        # Mở ô ngay trong cửa để nhân vật đi vào/ra
-        matrix[1][1] = 0
-        matrix[size - 2][size - 2] = 0
+        start_pos = random.choice(valid_starts)
+        matrix[start_pos[0]][start_pos[1]] = 2
+        
+        def manhattan_distance(p1, p2):
+            return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+
+        # Bắt buộc Goal phải cách Start ít nhất 70% kích thước mê cung
+        min_distance = int(size * 0.7) 
+        far_goals = [pos for pos in valid_goals if manhattan_distance(start_pos, pos) >= min_distance]
+        
+        if far_goals:
+            goal_pos = random.choice(far_goals)
+        else:
+            valid_goals = [pos for pos in valid_goals if pos != start_pos]
+            if valid_goals:
+                goal_pos = max(valid_goals, key=lambda p: manhattan_distance(start_pos, p))
+            else:
+                goal_pos = (size-1, size-2)
+                
+        matrix[goal_pos[0]][goal_pos[1]] = 3
         
         return matrix
 
@@ -95,4 +150,3 @@ class Maze:
                 elif value == 3:
                     goal = (i, j)
         return start, goal
-        

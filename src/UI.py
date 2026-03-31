@@ -147,9 +147,13 @@ if __name__ == "__main__":
     main_menu = MainMenu(WIDTH, HEIGHT, go_to_playing, quit_game)
     #sửa xong
 
-    maze = Maze(500, 500, "assets/sprites/maze.png")
-    matrix  = maze.load_matrix("src/Matrix.txt")
-
+    # Truyền WIDTH, HEIGHT của màn hình vào để hàm tính toán offset chuẩn xác
+    maze = Maze(WIDTH, HEIGHT, "assets/sprites/maze.png")
+    
+    # Tạo ngay một mê cung khổng lồ size 41x41 khi vừa vào game
+    matrix = maze.generate_maze(41)
+    goal_flag = Flag(maze.node_width, maze.node_height)
+    start_flag = Star(maze.node_width, maze.node_height)
     background = Background(WIDTH, HEIGHT, "assets/sprites/Background.png")
 
     stats_panel = StatsPanel()
@@ -159,7 +163,7 @@ if __name__ == "__main__":
     pending_path = []
     exploration_order = []
     exploration_progress = 0
-    explore_nodes_per_frame = 1
+    explore_nodes_per_frame = 10
     
     #Tạo bot
     bot = Bot("assets/sprites/bot.png", path, maze.node_width, maze.node_height)
@@ -195,7 +199,6 @@ if __name__ == "__main__":
         exploration_order = []
         exploration_progress = 0
         animation_phase = None
-        
         # Tạo maze mới
         matrix = maze.generate_maze(new_size)
         
@@ -292,7 +295,7 @@ if __name__ == "__main__":
                 explored_nodes_count = None
                 exploration_order = []
                 end_time = time.perf_counter()
-                time_taken = end_time - start_perf
+                time_taken = 0
 
             pending_path = path[:]
             exploration_progress = 0
@@ -418,10 +421,13 @@ if __name__ == "__main__":
     volume_btn = Button(1300, 10, 40, 40, *volume_on_imgs, onclick=toggle_volume)
 
     #Tạo thanh trượt chỉnh kích thước grid (số lẻ từ 9 đến 25), đặt phía trên nút Start
-    slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=25, initial_value=9, on_apply=resize_maze)
+    # Tăng max_value lên 61, đặt initial_value là 41 (khớp với matrix khởi tạo ở trên)
+    slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=51, initial_value=41, on_apply=resize_maze)
     #Vẽ lá cờ Goal
-    goal_flag = Flag(50, 50)
-    start_flag = Star(50, 50)
+    # Tìm đoạn này ở phần khởi tạo ngoài vòng lặp
+    # Thay vì truyền số cứng (50, 50), hãy truyền node_width và node_height của maze
+    goal_flag = Flag(maze.node_width, maze.node_height)
+    start_flag = Star(maze.node_width, maze.node_height)
     
     while running:
         
