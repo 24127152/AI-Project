@@ -297,8 +297,8 @@ def Jump_Point_Search(grid, start, goal):
             if jump_point is None or jump_point in closed:
                 continue
 
-            segment = expand_straight_line(current, jump_point)
-            tentative_g = current_g + sum(get_cell_cost(grid[r][c]) for r, c in segment)
+            step_length = abs(jump_point[0] - current[0]) + abs(jump_point[1] - current[1])
+            tentative_g = current_g + step_length
             if tentative_g >= g_score.get(jump_point, math.inf):
                 continue
 
