@@ -407,7 +407,7 @@ def Beam_search(grid, start, goal, beam_width=2):
 
 
 #IDA 
-def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explored_nodes):
+def dfs_search(matrix, goal, g, threshold, path, path_set, exploration_order, explored_nodes, rows, cols):
     current = path[-1]
     if current not in explored_nodes:
         explored_nodes.add(current)
@@ -421,28 +421,33 @@ def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explo
     min_threshold = float('inf')
     for move in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
         next_node = (current[0] + move[0], current[1] + move[1])
-        if 0 <= next_node[0] < len(matrix) and 0 <= next_node[1] < len(matrix[0]) and next_node not in path:
+        if 0 <= next_node[0] < rows and 0 <= next_node[1] < cols and next_node not in path_set:
             cell = matrix[next_node[0]][next_node[1]]
             if cell in WALKABLE_VALUES or next_node == goal:
                 path.append(next_node)
+                path_set.add(next_node)
                 #Backtracking
-                temp = dfs_search(matrix, start, goal, g + get_cell_cost(cell), threshold, path, exploration_order, explored_nodes)
+                temp = dfs_search(matrix, goal, g + get_cell_cost(cell), threshold, path, path_set, exploration_order, explored_nodes, rows, cols)
                 if temp == True:
                     return True
                 if temp < min_threshold:
                     min_threshold = temp
                 path.pop()
+                path_set.discard(next_node)
     return min_threshold
 
 def ida_star(matrix, start, goal, return_details=False):
     start_time = time.perf_counter()
     threshold = Heuristic(start, goal)
     path = [start]
+    path_set = {start}
     exploration_order = []
     explored_nodes = set()
+    rows = len(matrix)
+    cols = len(matrix[0])
 
     while True:
-        temp = dfs_search(matrix, start, goal, 0, threshold, path, exploration_order, explored_nodes)
+        temp = dfs_search(matrix, goal, 0, threshold, path, path_set, exploration_order, explored_nodes, rows, cols)
         if temp == True:
             end_time = time.perf_counter()
             if return_details:
