@@ -407,66 +407,68 @@ def Beam_search(grid, start, goal, beam_width=2):
 
 
 #IDA 
-def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explored_nodes):
-    current = path[-1]
-    if current not in explored_nodes:
-        explored_nodes.add(current)
-        exploration_order.append(current)
-
-    f = g + Heuristic(current, goal)
-    if f > threshold:
-        return f
-    if current == goal:
-        return True
-    min_threshold = float('inf')
-    for move in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-        next_node = (current[0] + move[0], current[1] + move[1])
-        if 0 <= next_node[0] < len(matrix) and 0 <= next_node[1] < len(matrix[0]) and next_node not in path:
-            cell = matrix[next_node[0]][next_node[1]]
-            if cell in WALKABLE_VALUES or next_node == goal:
-                path.append(next_node)
-                #Backtracking
-                temp = dfs_search(matrix, start, goal, g + get_cell_cost(cell), threshold, path, exploration_order, explored_nodes)
-                if temp == True:
-                    return True
-                if temp < min_threshold:
-                    min_threshold = temp
-                path.pop()
-    return min_threshold
-
-def ida_star(matrix, start, goal, return_details=False):
+def ida_star(matrix, start, goal):
     start_time = time.perf_counter()
-    threshold = Heuristic(start, goal)
-    path = [start]
+    rows = len(matrix)
+    cols = len(matrix[0])
     exploration_order = []
     explored_nodes = set()
 
+    def dfs_search(g, threshold, path, path_set):
+        current = path[-1]
+        if current not in explored_nodes:
+            explored_nodes.add(current)
+            exploration_order.append(current)
+
+        f = g + Heuristic(current, goal)
+        if f > threshold:
+            return f
+        if current == goal:
+            return True
+        min_threshold = float('inf')
+        for move in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+            next_node = (current[0] + move[0], current[1] + move[1])
+            if 0 <= next_node[0] < rows and 0 <= next_node[1] < cols and next_node not in path_set:
+                cell = matrix[next_node[0]][next_node[1]]
+                if cell in WALKABLE_VALUES or next_node == goal:
+                    path.append(next_node)
+                    path_set.add(next_node)
+                    #Backtracking
+                    temp = dfs_search(g + get_cell_cost(cell), threshold, path, path_set)
+                    if temp == True:
+                        return True
+                    if temp < min_threshold:
+                        min_threshold = temp
+                    path.pop()
+                    path_set.remove(next_node)
+        return min_threshold
+
+    threshold = Heuristic(start, goal)
+    path = [start]
+    path_set = {start}
+
     while True:
-        temp = dfs_search(matrix, start, goal, 0, threshold, path, exploration_order, explored_nodes)
+        temp = dfs_search(0, threshold, path, path_set)
         if temp == True:
             end_time = time.perf_counter()
-            if return_details:
-                return {
-                    "path_found": path,
-                    "exploration_order": exploration_order,
-                    "explored_nodes_count": len(explored_nodes),
-                    "total_path_cost": calculate_path_cost(matrix, path),
-                    "max_queue_size": 0,
-                    "processing_time": end_time - start_time,
-                }
-            return path
+            return {
+                "path_found": path,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(explored_nodes),
+                "total_path_cost": calculate_path_cost(matrix, path),
+                "max_queue_size": 0,
+                "processing_time": end_time - start_time,
+            }
         if temp == float('inf'):
             end_time = time.perf_counter()
-            if return_details:
-                return {
-                    "path_found": None,
-                    "exploration_order": exploration_order,
-                    "explored_nodes_count": len(explored_nodes),
-                    "total_path_cost": math.inf,
-                    "max_queue_size": 0,
-                    "processing_time": end_time - start_time,
-                }
-            return None
+            return {
+                "path_found": None,
+                "exploration_order": exploration_order,
+                "explored_nodes_count": len(explored_nodes),
+                "total_path_cost": math.inf,
+                "max_queue_size": 0,
+                "processing_time": end_time - start_time,
+            }
         threshold = temp
 
 #Build result
