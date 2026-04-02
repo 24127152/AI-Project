@@ -561,7 +561,7 @@ if __name__ == "__main__":
                 algorithm=f"{algorithms}",
                 result="Success" if algorithm_complete and len(path) > 0 else "Failure" if algorithm_complete and len(path) == 0 else "N/A",
                 path_length=len(path) if path is not None and algorithm_complete else "N/A",
-                execution_time=time_taken,
+                execution_time=time_taken if algorithm_complete else "N/A",
                 path_cost=total_path_cost if algorithm_complete else "N/A",
                 explored_nodes=explored_nodes_count if algorithm_complete else "N/A"
             )
