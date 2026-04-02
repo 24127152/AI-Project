@@ -431,6 +431,13 @@ if __name__ == "__main__":
 
     def step_explore():
         global exploration_progress, step_mode, animation_phase, exploration_order
+        # If algorithm hasn't started yet, start it in step mode first
+        if not algorithm_running and not algorithm_complete:
+            step_mode = True
+            start_algorithm(bot)
+            step_mode = True  # start_algorithm may reset it, so force it back
+            return
+        # Advance one node while in exploring phase
         if animation_phase == "exploring" and exploration_progress < len(exploration_order):
             step_mode = True
             exploration_progress = min(exploration_progress + 1, len(exploration_order))
