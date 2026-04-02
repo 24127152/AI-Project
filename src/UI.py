@@ -265,6 +265,7 @@ if __name__ == "__main__":
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time"]
 
             elif algorithms == "BFS":
@@ -272,6 +273,7 @@ if __name__ == "__main__":
                 path = result["path_found"] or []
                 total_path_cost = result.get("total_path_cost")
                 exploration_order = result.get("exploration_order", [])
+                explored_nodes_count = result.get("explored_nodes_count", len(exploration_order))
                 time_taken = result["processing_time"]
 
             elif algorithms == "DFS":
