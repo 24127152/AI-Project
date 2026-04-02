@@ -490,7 +490,7 @@ if __name__ == "__main__":
             # Vẽ explored path từ từ theo frame, bot chưa di chuyển trong phase này.
             if animation_phase == "exploring" and not step_mode:
                 exploration_progress = min(exploration_progress + explore_nodes_per_frame, len(exploration_order))
-            elif exploration_order:
+            elif animation_phase != "exploring" and exploration_order:
                 exploration_progress = len(exploration_order)
 
             draw_search_progression(screen, matrix, exploration_order, exploration_progress, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
