@@ -18,7 +18,7 @@ def get_cell_cost(cell_value):
 
 def calculate_path_cost(grid, path):
     if not path:
-        return math.inf
+        return None
 
     total_cost = 0
     for row, col in path[1:]:
@@ -36,6 +36,7 @@ def UCS(grid, start, goal):
     if not grid or not grid[0]:
         return {
             "path_found": None,
+            "exploration_order": [],
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
@@ -102,6 +103,7 @@ def A_search(grid, start, goal):
     if not grid or not grid[0]:
         return {
             "path_found": None,
+            "exploration_order": [],
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
@@ -321,6 +323,7 @@ def Beam_search(grid, start, goal, beam_width=2):
     if not grid or not grid[0]:
         return {
             "path_found": None,
+            "exploration_order": [],
             "explored_nodes_count": 0,
             "total_path_cost": math.inf,
             "max_queue_size": 0,
@@ -404,7 +407,7 @@ def Beam_search(grid, start, goal, beam_width=2):
 
 
 #IDA 
-def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explored_nodes):
+def dfs_search(matrix, goal, g, threshold, path, path_set, exploration_order, explored_nodes, rows, cols):
     current = path[-1]
     if current not in explored_nodes:
         explored_nodes.add(current)
@@ -418,28 +421,33 @@ def dfs_search(matrix, start, goal, g, threshold, path, exploration_order, explo
     min_threshold = float('inf')
     for move in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
         next_node = (current[0] + move[0], current[1] + move[1])
-        if 0 <= next_node[0] < len(matrix) and 0 <= next_node[1] < len(matrix[0]) and next_node not in path:
+        if 0 <= next_node[0] < rows and 0 <= next_node[1] < cols and next_node not in path_set:
             cell = matrix[next_node[0]][next_node[1]]
-            if cell in (0, 2, 3, MONSTER_COST_VALUE, PLANT_COST_VALUE) or next_node == goal:
+            if cell in WALKABLE_VALUES or next_node == goal:
                 path.append(next_node)
+                path_set.add(next_node)
                 #Backtracking
-                temp = dfs_search(matrix, start, goal, g + get_cell_cost(cell), threshold, path, exploration_order, explored_nodes)
+                temp = dfs_search(matrix, goal, g + get_cell_cost(cell), threshold, path, path_set, exploration_order, explored_nodes, rows, cols)
                 if temp == True:
                     return True
                 if temp < min_threshold:
                     min_threshold = temp
                 path.pop()
+                path_set.discard(next_node)
     return min_threshold
 
 def ida_star(matrix, start, goal, return_details=False):
     start_time = time.perf_counter()
     threshold = Heuristic(start, goal)
     path = [start]
+    path_set = {start}
     exploration_order = []
     explored_nodes = set()
+    rows = len(matrix)
+    cols = len(matrix[0])
 
     while True:
-        temp = dfs_search(matrix, start, goal, 0, threshold, path, exploration_order, explored_nodes)
+        temp = dfs_search(matrix, goal, 0, threshold, path, path_set, exploration_order, explored_nodes, rows, cols)
         if temp == True:
             end_time = time.perf_counter()
             if return_details:
@@ -447,6 +455,8 @@ def ida_star(matrix, start, goal, return_details=False):
                     "path_found": path,
                     "exploration_order": exploration_order,
                     "explored_nodes_count": len(explored_nodes),
+                    "total_path_cost": calculate_path_cost(matrix, path),
+                    "max_queue_size": 0,
                     "processing_time": end_time - start_time,
                 }
             return path
@@ -457,6 +467,8 @@ def ida_star(matrix, start, goal, return_details=False):
                     "path_found": None,
                     "exploration_order": exploration_order,
                     "explored_nodes_count": len(explored_nodes),
+                    "total_path_cost": math.inf,
+                    "max_queue_size": 0,
                     "processing_time": end_time - start_time,
                 }
             return None
@@ -519,7 +531,7 @@ def Bidirectional_bfs(grid, start, end):
             for dx, dy in directions:
                 nx, ny = x + dx, y + dy
                 if 0 <= nx < n and 0 <= ny < m:
-                    if grid[nx][ny] != 1 and (nx, ny) not in visited_start:
+                    if grid[nx][ny] in WALKABLE_VALUES and (nx, ny) not in visited_start:
                         queue_start.append((nx,ny))
                         visited_start.add((nx,ny))
                         parent_start[(nx, ny)] = (x, y)
@@ -531,7 +543,7 @@ def Bidirectional_bfs(grid, start, end):
                             return {
                                 "path_found": path,
                                 "exploration_order": exploration_order,
-                                "explored_nodes_count": len(visited_end) + len(visited_start),
+                                "explored_nodes_count": len(exploration_order),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
                                 "processing_time": end_time - start_time
@@ -542,7 +554,7 @@ def Bidirectional_bfs(grid, start, end):
             for dx, dy in directions:
                 nx, ny = x + dx, y + dy
                 if 0 <= nx < n and 0 <= ny < m:
-                    if grid[nx][ny] != 1 and (nx, ny) not in visited_end:
+                    if grid[nx][ny] in WALKABLE_VALUES and (nx, ny) not in visited_end:
                         queue_end.append((nx,ny))
                         visited_end.add((nx,ny))
                         parent_end[(nx, ny)] = (x, y)
@@ -554,7 +566,7 @@ def Bidirectional_bfs(grid, start, end):
                             return {
                                 "path_found": path,
                                 "exploration_order": exploration_order,
-                                "explored_nodes_count": len(visited_start) + len(visited_end),
+                                "explored_nodes_count": len(exploration_order),
                                 "total_path_cost": weighted_cost,
                                 "max_queue_size": queue_max_size,
                                 "processing_time": end_time - start_time
@@ -563,7 +575,7 @@ def Bidirectional_bfs(grid, start, end):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited_end) + len(visited_start),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": queue_max_size,
         "processing_time": end_time - start_time
@@ -621,7 +633,7 @@ def BFS(grid, start, goal):
             return {
                 "path_found": path,
                 "exploration_order": exploration_order,
-                "explored_nodes_count": len(visited),
+                "explored_nodes_count": len(exploration_order),
                 "total_path_cost": total_cost,
                 "max_queue_size": max_queue_size,
                 "processing_time": end_time - start_time,
@@ -640,7 +652,7 @@ def BFS(grid, start, goal):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": max_queue_size,
         "processing_time": end_time - start_time,
@@ -676,7 +688,7 @@ def DFS(grid, start, end):
             return {
                 "path_found": path,
                 "exploration_order": exploration_order,
-                "explored_nodes_count": len(visited),
+                "explored_nodes_count": len(exploration_order),
                 "total_path_cost": weighted_cost,
                 "max_queue_size": stack_max_size,
                 "processing_time": end_time - start_time
@@ -685,7 +697,7 @@ def DFS(grid, start, end):
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             if 0 <= nx < n and 0 <= ny < m:
-                if grid[nx][ny] != 1 and (nx, ny) not in visited:
+                if grid[nx][ny] in WALKABLE_VALUES and (nx, ny) not in visited:
                     stack.append((nx,ny))
                     visited.add((nx,ny))
                     parent[(nx, ny)] = (x, y)
@@ -694,7 +706,7 @@ def DFS(grid, start, end):
     return {
         "path_found": None,
         "exploration_order": exploration_order,
-        "explored_nodes_count": len(visited),
+        "explored_nodes_count": len(exploration_order),
         "total_path_cost": math.inf,
         "max_queue_size": stack_max_size,
         "processing_time":end_time - start_time
