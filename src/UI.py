@@ -410,24 +410,11 @@ if __name__ == "__main__":
     # Tăng max_value lên 61, đặt initial_value là 41 (khớp với matrix khởi tạo ở trên)
     slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=51, initial_value=41, on_apply=resize_maze)
 
-    #Nút Step Explore - nhấn mỗi lần hiện 1 ô khám phá (dùng flag.png làm icon)
-    def _make_flag_btn_img(size, tint=None):
-        sheet = pygame.image.load("assets/sprites/flag.png").convert_alpha()
-        frame_w = sheet.get_width() // 5
-        frame_h = sheet.get_height()
-        frame = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA)
-        frame.blit(sheet, (0, 0), pygame.Rect(0, 0, frame_w, frame_h))
-        img = pygame.transform.smoothscale(frame, size)
-        if tint:
-            overlay = pygame.Surface(size, pygame.SRCALPHA)
-            overlay.fill(tint)
-            img.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
-        return img
-
-    _flag_btn_size = (50, 50)
-    flag_btn_normal = _make_flag_btn_img(_flag_btn_size)
-    flag_btn_hover  = _make_flag_btn_img(_flag_btn_size, tint=(40, 40, 40, 0))
-    flag_btn_pressed = _make_flag_btn_img(_flag_btn_size, tint=(0, 0, 80, 0))
+    #Nút Step Explore - nhấn mỗi lần hiện 1 ô khám phá (dùng step.jpg làm icon)
+    _step_btn_size = (120, 50)
+    flag_btn_normal  = load_img_safe("assets/sprites/step.jpg",  _step_btn_size)
+    flag_btn_hover   = load_img_safe("assets/sprites/step.jpg",  _step_btn_size)
+    flag_btn_pressed = load_img_safe("assets/sprites/step.jpg",  _step_btn_size)
 
     def step_explore():
         global exploration_progress, step_mode, animation_phase, exploration_order
@@ -443,9 +430,9 @@ if __name__ == "__main__":
             exploration_progress = min(exploration_progress + 1, len(exploration_order))
 
     btn_step_explore = Button(
-        control_btn_x + 20 + 35,
+        control_btn_x + 20,
         control_btn_y_start + (50 + control_btn_gap) * 3,
-        _flag_btn_size[0], _flag_btn_size[1],
+        _step_btn_size[0], _step_btn_size[1],
         flag_btn_normal, flag_btn_hover, flag_btn_pressed,
         onclick=step_explore
     )
