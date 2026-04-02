@@ -181,6 +181,11 @@ if __name__ == "__main__":
         animation_phase = None
         # Tạo maze mới
         matrix = maze.generate_maze(new_size)
+
+        # Ghi ma trận ra file output.txt
+        with open("output.txt", "w") as f:
+            for row in matrix:
+                f.write(" ".join(map(str, row)) + "\n")
         
         # Tìm start và goal mới
         start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT, MAZE_SHIFT_X)
