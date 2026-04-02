@@ -4,8 +4,8 @@ class Bot:
     def __init__(self, image_path, path, node_width, node_height):
         # 1. Tối ưu tỷ lệ: Bot chiếm 75% chiều rộng và 85% chiều cao của ô
         # Giảm mức giới hạn (floor) xuống 6px để bot có thể co lại cực nhỏ cho map khổng lồ
-        self.draw_width = max(6, int(node_width * 0.75))
-        self.draw_height = max(8, int(node_height * 0.85))
+        self.draw_width = max(6, int(node_width * 1))
+        self.draw_height = max(8, int(node_height * 1))
         
         self.bot_x = 0
         self.bot_y = 0
@@ -17,7 +17,7 @@ class Bot:
         self.path_index = 0
         
         # 2. Tốc độ động: Tốc độ bằng 1/3 kích thước ô, thấp nhất là 2px/frame
-        self.speed = max(2, node_width // 3)
+        self.speed = max(1.5, node_width // 3)
 
         self.animate = pygame.image.load("assets/sprites/bot_animate.png").convert_alpha()
         self.is_moving = False

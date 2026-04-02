@@ -144,7 +144,8 @@ if __name__ == "__main__":
     exploration_order = []
     exploration_progress = 0
     explore_nodes_per_frame = 10
-    
+    step_mode = False
+
     #Tạo bot
     bot = Bot("assets/sprites/bot.png", path, maze.node_width, maze.node_height)
     start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT, MAZE_SHIFT_X)
@@ -170,7 +171,7 @@ if __name__ == "__main__":
     
     #Điều chính kích thước ma trận
     def resize_maze(new_size):
-        global matrix, start, goal, algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, animation_phase, monsters, plants
+        global matrix, start, goal, algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, animation_phase, monsters, plants, step_mode
         algorithm_running = False
         path = []
         total_path_cost = None
@@ -179,9 +180,11 @@ if __name__ == "__main__":
         exploration_order = []
         exploration_progress = 0
         animation_phase = None
+        step_mode = False
         # Tạo maze mới
         matrix = maze.generate_maze(new_size)
         
+
         # Tìm start và goal mới
         start, goal = maze.find_pos(matrix, (0, 0), (len(matrix) - 1, len(matrix[0]) - 1), bot, WIDTH, HEIGHT, MAZE_SHIFT_X)
 
@@ -206,7 +209,8 @@ if __name__ == "__main__":
         move_bot_to_start()
     
     def start_algorithm(bot):
-        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase, step_mode
+        step_mode = False
          
         if not algorithm_running:
            
@@ -307,7 +311,7 @@ if __name__ == "__main__":
             
     #Reset thuật toán
     def restart_algorithm(bot):
-        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase
+        global algorithm_running, path, total_path_cost, explored_nodes_count, pending_path, exploration_order, exploration_progress, time_taken, algorithm_complete, animation_phase, step_mode
         path = []
         total_path_cost = None
         explored_nodes_count = None
@@ -315,6 +319,7 @@ if __name__ == "__main__":
         exploration_order = []
         exploration_progress = 0
         animation_phase = None
+        step_mode = False
         bot.path = path
         bot.is_moving = False
         bot.path_index = 0
@@ -405,6 +410,33 @@ if __name__ == "__main__":
     #Tạo thanh trượt chỉnh kích thước grid (số lẻ từ 9 đến 25), đặt phía trên nút Start
     # Tăng max_value lên 61, đặt initial_value là 41 (khớp với matrix khởi tạo ở trên)
     slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=51, initial_value=41, on_apply=resize_maze)
+    
+    #Nút Step Explore - nhấn mỗi lần hiện 1 ô khám phá (dùng step.jpg làm icon)
+    _step_btn_size = (120, 50)
+    step_btn_normal  = load_img_safe("assets/sprites/step_normal.jpg",  _step_btn_size)
+    step_btn_hover   = load_img_safe("assets/sprites/step_hover.jpg",  _step_btn_size)
+    step_btn_pressed = load_img_safe("assets/sprites/step_pressed.jpg",  _step_btn_size)
+
+    def step_explore():
+        global exploration_progress, step_mode, animation_phase, exploration_order
+        # If algorithm hasn't started yet, start it in step mode first
+        if not algorithm_running and not algorithm_complete:
+            step_mode = True
+            start_algorithm(bot)
+            step_mode = True  # start_algorithm may reset it, so force it back
+            return
+        # Advance one node while in exploring phase
+        if animation_phase == "exploring" and exploration_progress < len(exploration_order):
+            step_mode = True
+            exploration_progress = min(exploration_progress + 1, len(exploration_order))
+
+    btn_step_explore = Button(
+        control_btn_x + 20,
+        control_btn_y_start + (50 + control_btn_gap) * 3,
+        _step_btn_size[0], _step_btn_size[1],
+        step_btn_normal, step_btn_hover, step_btn_pressed,
+        onclick=step_explore
+    )
     #Vẽ lá cờ Goal
     # Tìm đoạn này ở phần khởi tạo ngoài vòng lặp
     # Thay vì truyền số cứng (50, 50), hãy truyền node_width và node_height của maze
@@ -426,6 +458,8 @@ if __name__ == "__main__":
             #vẽ nút retry
             btn_restart.draw(screen)
             btn_back_game.draw(screen) # Vẽ nút back
+            btn_step_explore.draw(screen) # Vẽ nút step explore (flag)
+
             
             volume_btn.draw(screen)
             earth.draw(screen)
@@ -450,9 +484,9 @@ if __name__ == "__main__":
             maze.draw_maze(matrix, screen, WIDTH, HEIGHT, bot, MAZE_SHIFT_X)
 
             # Vẽ explored path từ từ theo frame, bot chưa di chuyển trong phase này.
-            if animation_phase == "exploring":
+            if animation_phase == "exploring" and not step_mode:
                 exploration_progress = min(exploration_progress + explore_nodes_per_frame, len(exploration_order))
-            elif exploration_order:
+            elif animation_phase != "exploring" and exploration_order:
                 exploration_progress = len(exploration_order)
 
             draw_search_progression(screen, matrix, exploration_order, exploration_progress, WIDTH, HEIGHT, maze.node_width, MAZE_SHIFT_X)
@@ -516,7 +550,7 @@ if __name__ == "__main__":
                 algorithm=f"{algorithms}",
                 result="Success" if algorithm_complete and len(path) > 0 else "Failure" if algorithm_complete and len(path) == 0 else "N/A",
                 path_length=len(path) if path is not None and algorithm_complete else "N/A",
-                execution_time=time_taken,
+                execution_time=time_taken if algorithm_complete else None,
                 path_cost=total_path_cost if algorithm_complete else "N/A",
                 explored_nodes=explored_nodes_count if algorithm_complete else "N/A"
             )
@@ -539,6 +573,7 @@ if __name__ == "__main__":
                 btn_start.handle_event(event)
                 btn_back_game.handle_event(event) # Xử lý click nút Back
                 btn_restart.handle_event(event)
+                btn_step_explore.handle_event(event) # Xử lý click nút step explore
                 volume_btn.handle_event(event)
                 slider.handle_event(event)
                 selected = selection_card.handle_event(event)
