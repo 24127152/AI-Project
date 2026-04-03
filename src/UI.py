@@ -415,7 +415,7 @@ if __name__ == "__main__":
     _step_btn_size = (120, 50)
     step_btn_normal  = load_img_safe("assets/sprites/step_normal.jpg",  _step_btn_size)
     step_btn_hover   = load_img_safe("assets/sprites/step_hover.jpg",  _step_btn_size)
-    step_btn_pressed = load_img_safe("assets/sprites/step_pressed.jpg",  _step_btn_size)
+    step_btn_pressed = load_img_safe("assets/sprites/step_press.jpg",  _step_btn_size)
 
     def step_explore():
         global exploration_progress, step_mode, animation_phase, exploration_order
