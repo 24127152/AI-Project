@@ -35,9 +35,9 @@ def draw_path_progression(screen, matrix, path, progress_index, width, height, t
     last = min(progress_index, len(path) - 1)
     for k in range(last + 1):
         i, j = path[k]
-        x = offset_x + j * (tile_size) + tile_size // 2 - 5
-        y = offset_y  + i * (tile_size) + tile_size // 2 - 5
-        pygame.draw.rect(screen, (255, 215, 0), (x, y, 10, 10))
+        x = offset_x + j * (tile_size) + tile_size // 2 - 3
+        y = offset_y  + i * (tile_size) + tile_size // 2 - 3
+        pygame.draw.rect(screen, (255, 215, 0), (x, y, 6, 6))
 
 
 def draw_search_progression(screen, matrix, explored_nodes, progress_index, width, height, tile_size, maze_shift_x=0):
@@ -52,9 +52,9 @@ def draw_search_progression(screen, matrix, explored_nodes, progress_index, widt
     last = min(progress_index, len(explored_nodes) - 1)
     for k in range(last + 1):
         i, j = explored_nodes[k]
-        x = offset_x + j * tile_size + tile_size // 2 - 4
-        y = offset_y + i * tile_size + tile_size // 2 - 4
-        pygame.draw.rect(screen, (64, 196, 255), (x, y, 8, 8))
+        x = offset_x + j * tile_size + tile_size // 2 - 2
+        y = offset_y + i * tile_size + tile_size // 2 - 2
+        pygame.draw.rect(screen, (64, 196, 255), (x, y, 5, 5))
 
 
 def spawn_monster_in_maze(matrix, start, goal, width, height, tile_size, maze_shift_x=0):
@@ -330,13 +330,13 @@ if __name__ == "__main__":
 
     # Bố cục nút điều khiển đặt bên phải legend panel
     legend_anchor_x = 500
-    legend_anchor_y = 700
+    legend_anchor_y = 715
     legend_panel_x = legend_anchor_x - 490
     legend_panel_y = legend_anchor_y - 450
     legend_panel_width = 240
 
     control_btn_x = legend_panel_x + legend_panel_width + 20
-    control_btn_y_start = legend_panel_y + 170
+    control_btn_y_start = legend_panel_y + 120
     control_btn_gap = 10
 
     #Nút Start
@@ -409,13 +409,13 @@ if __name__ == "__main__":
 
     #Tạo thanh trượt chỉnh kích thước grid (số lẻ từ 9 đến 25), đặt phía trên nút Start
     # Tăng max_value lên 61, đặt initial_value là 41 (khớp với matrix khởi tạo ở trên)
-    slider = Slider(control_btn_x - 20, control_btn_y_start - 60, 200, 5, min_value=9, max_value=51, initial_value=41, on_apply=resize_maze)
+    slider = Slider(control_btn_x - 20, control_btn_y_start - 40, 200, 5, min_value=9, max_value=51, initial_value=41, on_apply=resize_maze)
     
     #Nút Step Explore - nhấn mỗi lần hiện 1 ô khám phá (dùng step.jpg làm icon)
     _step_btn_size = (120, 50)
-    step_btn_normal  = load_img_safe("assets/sprites/step_normal.jpg",  _step_btn_size)
-    step_btn_hover   = load_img_safe("assets/sprites/step_hover.jpg",  _step_btn_size)
-    step_btn_pressed = load_img_safe("assets/sprites/step_press.jpg",  _step_btn_size)
+    step_btn_normal  = load_img_safe("assets/sprites/step_normal.png",  _step_btn_size)
+    step_btn_hover   = load_img_safe("assets/sprites/step_hover.png",  _step_btn_size)
+    step_btn_pressed = load_img_safe("assets/sprites/step_press.png",  _step_btn_size)
 
     def step_explore():
         global exploration_progress, step_mode, animation_phase, exploration_order
@@ -440,7 +440,7 @@ if __name__ == "__main__":
     #Vẽ lá cờ Goal
     # Tìm đoạn này ở phần khởi tạo ngoài vòng lặp
     # Thay vì truyền số cứng (50, 50), hãy truyền node_width và node_height của maze
-    goal_flag = Flag(maze.node_width, maze.node_height)
+    goal_flag = Flag(maze.node_width * 1.5, maze.node_height * 1.5)
     start_flag = Star(maze.node_width, maze.node_height)
     
     while running:
